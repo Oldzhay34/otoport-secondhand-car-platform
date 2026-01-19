@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Otoport - Store Profile</title>
+    <link rel="stylesheet" href="/css/storeprofile.css" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo" onclick="goStoreHome()" role="button" tabindex="0">
+        <span>OTO<strong>PORT</strong></span>
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline">
+            <span>Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost" type="button" onclick="goStoreHome()">home</button>
+        <button class="ghost" type="button" onclick="goCreateListing()">ilan ver</button>
+        <button class="ghost" type="button" onclick="goNotifications()">bildirimler</button>
+        <button class="ghost" type="button" onclick="goInbox()">gelen mesajlar</button>
+        <button class="ghost" type="button" onclick="logout()">logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
+
+    <section class="panel">
+        <div class="head">
+            <div>
+                <div class="h-title">Mağaza Profilim</div>
+                <div class="muted tiny" id="meta">—</div>
+            </div>
+            <div class="right">
+                <span id="verifiedPill" class="pill" style="display:none;">Verified</span>
+            </div>
+        </div>
+
+        <!-- ✅ Logo + Password -->
+        <div class="profile-top">
+            <div class="card logo-card">
+                <div class="logo-preview">
+                    <img id="logoImg" src="/imagesforapp/logo2.png" alt="logo" />
+                </div>
+                <div class="logo-actions">
+                    <div class="muted tiny">Logo (PNG / JPG / WEBP)</div>
+                    <input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                    <button id="uploadLogoBtn" class="btn" type="button">Logo yükle</button>
+                    <div class="muted tiny">Not: Yükledikten sonra cache otomatik yenilenir.</div>
+                </div>
+            </div>
+
+            <div class="card pass-card">
+                <div class="h-mini">Şifre Değiştir</div>
+
+                <div class="pass-grid">
+                    <div class="field">
+                        <label>Eski Şifre</label>
+                        <input id="oldPassword" type="password" />
+                    </div>
+                    <div class="field">
+                        <label>Yeni Şifre</label>
+                        <input id="newPassword" type="password" />
+                    </div>
+                    <div class="field">
+                        <label>Yeni Şifre (Tekrar)</label>
+                        <input id="confirmPassword" type="password" />
+                    </div>
+                </div>
+
+                <div class="actions left">
+                    <button id="changePwBtn" class="btn primary" type="button">Şifreyi değiştir</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ Profile form -->
+        <form id="form" class="form" autocomplete="off">
+            <div class="grid">
+                <div class="field">
+                    <label>Mağaza Adı</label>
+                    <input id="storeName" type="text" maxlength="140" required />
+                </div>
+
+                <div class="field">
+                    <label>Yetkili Kişi</label>
+                    <input id="authorizedPerson" type="text" maxlength="80" />
+                </div>
+
+                <div class="field">
+                    <label>E-posta</label>
+                    <input id="email" type="email" disabled />
+                    <div class="hint">E-posta güvenlik nedeniyle değiştirilemiyor.</div>
+                </div>
+
+                <div class="field">
+                    <label>Telefon</label>
+                    <input id="phone" type="text" maxlength="20" placeholder="05xx..." />
+                </div>
+
+                <div class="field">
+                    <label>Website</label>
+                    <input id="website" type="text" maxlength="120" placeholder="https://..." />
+                </div>
+
+                <div class="field">
+                    <label>Vergi No</label>
+                    <input id="taxNo" type="text" maxlength="40" placeholder="(opsiyonel)" />
+                </div>
+
+                <div class="field">
+                    <label>Şehir</label>
+                    <input id="city" type="text" maxlength="60" />
+                </div>
+
+                <div class="field">
+                    <label>İlçe</label>
+                    <input id="district" type="text" maxlength="60" />
+                </div>
+
+                <div class="field col2">
+                    <label>Adres</label>
+                    <input id="addressLine" type="text" maxlength="255" />
+                </div>
+
+                <div class="field">
+                    <label>Kat</label>
+                    <input id="floor" type="number" min="0" max="50" />
+                </div>
+
+                <div class="field">
+                    <label>Dükkan No</label>
+                    <input id="shopNo" type="text" maxlength="20" />
+                </div>
+
+                <div class="field col2">
+                    <label>Tarif Notu</label>
+                    <input id="directionNote" type="text" maxlength="255" placeholder="Örn: girişten sağa..." />
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="saveBtn" class="btn primary" type="submit">Kaydet</button>
+                <button id="resetBtn" class="btn" type="button">Sıfırla</button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<footer class="footer">© Otoport</footer>
+<script src="/js/storeprofile.js"></script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Otoport - Profil</title>
+
+    <link rel="stylesheet" href="/css/profile.css" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo" onclick="goHome()" role="button" tabindex="0" title="Ana sayfa">
+        <span>OTO<strong>PORT</strong></span>
+    </div>
+
+    <div class="search-box">
+        <input type="text" placeholder="Ara..." disabled />
+        <button type="button" disabled>Ara</button>
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline">
+            <span>Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost" type="button" onclick="goHome()">Home</button>
+        <button class="ghost favnav" type="button" onclick="goFavorites()" aria-label="Favoriler">
+            <span class="heart">❤</span>
+        </button>
+        <button class="ghost active" type="button" onclick="goProfile()">Profil</button>
+        <button class="ghost" type="button" onclick="logout()">Çıkış</button>
+    </div>
+</header>
+
+<main class="layout">
+    <section class="panel">
+        <div class="panel-head">
+            <h2 class="page-title">Profil Bilgileri</h2>
+            <p class="subtle">E-posta değiştirilemez. Diğer alanları güncelleyebilirsin.</p>
+        </div>
+
+        <div id="alert" class="alert" style="display:none;"></div>
+
+        <form id="profileForm" class="form" autocomplete="off">
+            <div class="grid">
+                <label>
+                    Ad
+                    <input id="firstName" type="text" maxlength="60" placeholder="Ad" required />
+                </label>
+
+                <label>
+                    Soyad
+                    <input id="lastName" type="text" maxlength="60" placeholder="Soyad" required />
+                </label>
+
+                <label>
+                    E-posta (değiştirilemez)
+                    <input id="email" type="email" placeholder="email@ornek.com" disabled />
+                </label>
+
+                <label>
+                    Telefon
+                    <input id="phone" type="text" maxlength="30" placeholder="05xx..." />
+                </label>
+
+                <label>
+                    Doğum Tarihi
+                    <input id="birthDate" type="date" />
+                </label>
+
+                <label class="checkline">
+                    <input id="marketingConsent" type="checkbox" />
+                    <span>Pazarlama izni (marketing consent)</span>
+                </label>
+            </div>
+
+            <div class="actions">
+                <button id="saveBtn" class="apply" type="submit">Kaydet</button>
+                <button id="reloadBtn" class="ghost" type="button">Yenile</button>
+            </div>
+
+            <div class="meta">
+                <span class="muted">Client ID:</span>
+                <span id="clientId" class="pill">-</span>
+            </div>
+        </form>
+    </section>
+</main>
+
+<footer class="footer">© Otoport</footer>
+
+<script src="/js/profile.js"></script>
+</body>
+</html>

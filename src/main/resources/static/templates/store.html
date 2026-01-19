@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Otoport - Mağaza</title>
+    <link rel="stylesheet" href="/css/store.css" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo" onclick="goHome()" role="button" tabindex="0">
+        <span>OTO<strong>PORT</strong></span>
+    </div>
+
+    <div class="search-box">
+        <input type="text" placeholder="Arama motoru" />
+        <button type="button">Ara</button>
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline">
+            <span>Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost favnav" type="button" onclick="goFavorites()" aria-label="Favoriler">
+            <span class="heart">❤</span>
+        </button>
+        <button class="ghost" type="button" onclick="goProfile()">Profil</button>
+        <button class="ghost" type="button" onclick="logout()">Çıkış</button>
+    </div>
+</header>
+
+<main class="layout">
+
+    <!-- LEFT FILTERS -->
+    <aside class="filters">
+        <h3>Mağaza içi filtre</h3>
+
+        <label>
+            Kasa Tipi
+            <select id="bodyType">
+                <option value="">(Hepsi)</option>
+                <option value="SEDAN">Sedan</option>
+                <option value="HATCHBACK">Hatchback</option>
+                <option value="SUV">SUV</option>
+                <option value="COUPE">Coupe</option>
+                <option value="CABRIO">Cabrio</option>
+                <option value="STATION_WAGON">Station Wagon</option>
+                <option value="PICKUP">Pickup</option>
+                <option value="VAN">Van</option>
+            </select>
+        </label>
+
+        <label>
+            Min Yıl
+            <input id="yearMin" type="number" min="1990" max="2026" placeholder="2020" />
+        </label>
+
+        <label>
+            Max Yıl
+            <input id="yearMax" type="number" min="1990" max="2026" placeholder="2023" />
+        </label>
+
+        <label>
+            Min Fiyat
+            <input id="priceMin" type="number" min="0" placeholder="₺" />
+        </label>
+
+        <label>
+            Max Fiyat
+            <input id="priceMax" type="number" min="0" placeholder="₺" />
+        </label>
+
+        <label>
+            Listeleme Limiti
+            <input id="limit" type="number" min="1" max="200" value="30" />
+        </label>
+
+        <button class="apply" type="button" id="applyBtn">Uygula</button>
+        <button class="ghost full" type="button" id="resetBtn">Sıfırla</button>
+
+        <p class="muted tiny">Not: Şimdilik özellik (feature) filtreleri yok.</p>
+    </aside>
+
+    <!-- MAIN -->
+    <section class="content">
+
+        <!-- HERO -->
+        <div class="hero">
+            <div class="hero-img" id="storeHeroImg">
+                <div class="hero-badge" id="verifiedBadge" style="display:none;">✔ Verified</div>
+            </div>
+
+            <div class="hero-info">
+                <h2 id="storeName" class="store-title">Mağaza</h2>
+                <div class="store-sub" id="storeSub">—</div>
+
+                <div class="store-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Adres</span>
+                        <span id="storeAddress" class="meta-value">—</span>
+                    </div>
+
+                    <div class="meta-item">
+                        <span class="meta-label">Telefon</span>
+                        <span id="storePhone" class="meta-value">—</span>
+                    </div>
+
+                    <div class="meta-item">
+                        <span class="meta-label">Kat / Dükkan</span>
+                        <span id="storeFloorShop" class="meta-value">—</span>
+                    </div>
+
+                    <div class="meta-item">
+                        <span class="meta-label">Yön</span>
+                        <span id="storeDir" class="meta-value">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALERT -->
+        <div id="alert" class="alert" style="display:none;"></div>
+
+        <!-- LISTINGS -->
+        <h3 class="section-title">İlanlar</h3>
+        <div id="listingGrid" class="listing-grid"></div>
+
+    </section>
+
+</main>
+
+<footer class="footer">© Otoport</footer>
+
+<script src="/js/store.js"></script>
+</body>
+</html>

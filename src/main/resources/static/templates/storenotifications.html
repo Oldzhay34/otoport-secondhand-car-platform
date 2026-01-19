@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Otoport - Store Notifications</title>
+  <link rel="stylesheet" href="/css/storenotifications.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo" onclick="goStoreHome()" role="button" tabindex="0">
+    <span>OTO<strong>PORT</strong></span>
+  </div>
+
+  <div class="user-actions">
+    <div class="theme-inline">
+      <span>Light</span>
+      <label class="switch" aria-label="Tema seç">
+        <input id="themeToggle" type="checkbox" />
+        <span class="slider"></span>
+      </label>
+      <span>Dark</span>
+    </div>
+
+    <button class="ghost" type="button" onclick="goStoreHome()">home</button>
+    <button class="ghost" type="button" onclick="goCreateListing()">ilan ver</button>
+    <button class="ghost" type="button" onclick="goInbox()">gelen mesajlar</button>
+    <button class="ghost" type="button" onclick="goStoreProfile()">profile store</button>
+    <button class="ghost" type="button" onclick="logout()">logout</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="alert" class="alert" style="display:none;"></div>
+
+  <section class="panel">
+    <div class="head">
+      <div>
+        <div class="h-title">Bildirimler</div>
+        <div class="muted tiny" id="meta">—</div>
+      </div>
+
+      <div class="actions">
+        <div class="seg" role="tablist" aria-label="Bildirim filtreleri">
+          <button id="tabAll" class="seg-btn active" type="button">Tümü</button>
+          <button id="tabUnread" class="seg-btn" type="button">Okunmamış</button>
+        </div>
+
+        <button id="markAllBtn" class="btn primary" type="button">Tümünü okundu yap</button>
+      </div>
+    </div>
+
+    <div class="list" id="list">
+      <!-- JS dolduracak -->
+    </div>
+  </section>
+
+  <section class="panel details" id="detailsPanel" style="display:none;">
+    <div class="details-head">
+      <div>
+        <div class="h-title" id="dTitle">—</div>
+        <div class="muted tiny" id="dMeta">—</div>
+      </div>
+      <button class="btn" id="closeDetails" type="button">Kapat</button>
+    </div>
+
+    <div class="details-body">
+      <div class="kv">
+        <span class="k">Type</span>
+        <span class="v" id="dType">—</span>
+      </div>
+
+      <div class="msg" id="dMessage">—</div>
+
+      <div class="payload">
+        <div class="muted tiny">Payload (JSON)</div>
+        <pre id="dPayload" class="code">—</pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">© Otoport</footer>
+
+<script src="/js/storenotifications.js"></script>
+</body>
+</html>

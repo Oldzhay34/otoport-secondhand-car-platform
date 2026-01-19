@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Otoport - Admin Panel</title>
+    <link rel="stylesheet" href="/css/adminhome.css" />
+</head>
+
+<body data-theme="dark">
+<header class="topbar">
+    <div class="brand">OTOPORT • Admin</div>
+
+    <div class="right">
+        <label class="theme">
+            <span>Light</span>
+            <input id="themeToggle" type="checkbox" />
+            <span>Dark</span>
+        </label>
+        <button id="logoutBtn" class="btn">logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <h1>Admin Dashboard</h1>
+    <div class="sub">Bugün uygulama özeti (demo)</div>
+
+    <section class="grid">
+        <div class="card">
+            <div class="label">Toplam ziyaret (bugün)</div>
+            <div class="value" id="statTotal">—</div>
+        </div>
+        <div class="card">
+            <div class="label">Misafir</div>
+            <div class="value" id="statGuest">—</div>
+        </div>
+        <div class="card">
+            <div class="label">Kullanıcı</div>
+            <div class="value" id="statClient">—</div>
+        </div>
+        <div class="card">
+            <div class="label">Mağaza</div>
+            <div class="value" id="statStore">—</div>
+        </div>
+    </section>
+
+    <section class="wide">
+        <div class="wide-left">
+            <h2>Mağaza İlan Hareketleri</h2>
+            <div class="tiny">Create/Delete/Update logları buraya gelecek</div>
+            <div id="storeAct" class="tiny">—</div>
+        </div>
+        <div class="wide-right">
+            <h2>Mesaj Takibi</h2>
+            <div class="tiny">Store bazlı Inquiry / Message sayıları</div>
+            <div id="msgAct" class="tiny">—</div>
+        </div>
+    </section>
+
+    <!-- DEBUG / ERROR AREA -->
+    <div id="adminErr" class="errbox"></div>
+
+    <footer class="foot">© Otoport</footer>
+</main>
+
+<!-- ÖNEMLİ: defer -->
+<script src="/js/adminhome.js" defer></script>
+</body>
+</html>

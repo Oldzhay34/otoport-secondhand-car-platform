@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mağaza • İlan Oluştur</title>
+
+    <link rel="stylesheet" href="/css/storecreateListing.css" />
+</head>
+
+<body data-theme="dark">
+<!-- Topbar -->
+<header class="topbar">
+    <div class="brand" onclick="goStoreHome()" role="button" tabindex="0">
+        <img class="logo" src="/imagesforapp/logo2.png" alt="logo">
+        <div class="btxt">
+            <div class="b1">OtoPort</div>
+            <div class="b2">Store Panel</div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <label class="theme">
+            <input id="themeToggle" type="checkbox" />
+            <span class="slider"></span>
+            <span class="tlabel">Dark</span>
+        </label>
+
+        <button class="btn ghost" onclick="goStoreHome()">Home</button>
+        <button class="btn danger" onclick="logout()">Çıkış</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
+
+    <section class="card">
+        <div class="card-head">
+            <h1>Yeni İlan Oluştur</h1>
+            <p class="muted">Aracını katalogtan seç (En fazla 10 fotoğraf).</p>
+        </div>
+
+        <form id="form" class="form">
+            <!-- Listing -->
+            <div class="grid2">
+                <div>
+                    <label class="lbl">İlan Başlığı *</label>
+                    <input id="title" class="inp" maxlength="150" required placeholder="Örn: 2022 Audi A3 35 TFSI S Line" />
+                </div>
+
+                <div>
+                    <label class="lbl">Fiyat *</label>
+                    <input id="price" class="inp" type="number" min="1" step="0.01" required placeholder="Örn: 1250000" />
+                </div>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Para Birimi *</label>
+                    <select id="currency" class="inp" required>
+                        <option value="TRY">TRY</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                </div>
+
+                <div class="chk">
+                    <label class="chkbox">
+                        <input id="negotiable" type="checkbox" checked />
+                        <span>Pazarlık var</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label class="lbl">Açıklama</label>
+                <textarea id="description" class="inp area" rows="4" placeholder="İlan açıklaması..."></textarea>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Şehir *</label>
+                    <input id="city" class="inp" maxlength="60" required placeholder="Örn: İstanbul" />
+                </div>
+                <div>
+                    <label class="lbl">İlçe</label>
+                    <input id="district" class="inp" maxlength="60" placeholder="Örn: Kadıköy" />
+                </div>
+            </div>
+
+            <hr class="sep" />
+
+            <!-- Car selection from JSON -->
+            <h2 class="h2">Araç Seçimi (Katalog)</h2>
+
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Marka *</label>
+                    <select id="brand" class="inp" required></select>
+                </div>
+                <div>
+                    <label class="lbl">Model *</label>
+                    <select id="model" class="inp" required></select>
+                </div>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Variant (ops.)</label>
+                    <select id="variant" class="inp"></select>
+                </div>
+                <div>
+                    <label class="lbl">Engine / Trim (ops.)</label>
+                    <select id="engine" class="inp"></select>
+                </div>
+            </div>
+
+            <div>
+                <label class="lbl">Package (ops.)</label>
+                <select id="pkg" class="inp"></select>
+            </div>
+
+            <hr class="sep" />
+
+            <!-- Car required enums -->
+            <h2 class="h2">Teknik Bilgiler</h2>
+
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Yıl *</label>
+                    <input id="year" class="inp" type="number" min="1990" max="2100" required placeholder="2022" />
+                </div>
+                <div>
+                    <label class="lbl">Km *</label>
+                    <input id="km" class="inp" type="number" min="0" required placeholder="45000" />
+                </div>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Vites *</label>
+                    <select id="transmission" class="inp" required>
+                        <option value="">Seç</option>
+                        <option value="MANUAL">MANUAL</option>
+                        <option value="AUTOMATIC">AUTOMATIC</option>
+                        <option value="SEMI_AUTOMATIC">SEMI_AUTOMATIC</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="lbl">Yakıt *</label>
+                    <select id="fuelType" class="inp" required>
+                        <option value="">Seç</option>
+                        <option value="GASOLINE">GASOLINE</option>
+                        <option value="DIESEL">DIESEL</option>
+                        <option value="HYBRID">HYBRID</option>
+                        <option value="ELECTRIC">ELECTRIC</option>
+                        <option value="LPG">LPG</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="lbl">Kasa Tipi *</label>
+                <select id="bodyType" class="inp" required>
+                    <option value="">Seç</option>
+                    <option value="SEDAN">SEDAN</option>
+                    <option value="HATCHBACK">HATCHBACK</option>
+                    <option value="SUV">SUV</option>
+                    <option value="COUPE">COUPE</option>
+                    <option value="WAGON">WAGON</option>
+                    <option value="VAN">VAN</option>
+                    <option value="PICKUP">PICKUP</option>
+                </select>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Renk</label>
+                    <input id="color" class="inp" maxlength="60" placeholder="Beyaz" />
+                </div>
+                <div>
+                    <label class="lbl">Motor Hacmi (cc)</label>
+                    <input id="engineCc" class="inp" type="number" min="0" placeholder="1598" />
+                </div>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Motor Gücü (hp)</label>
+                    <input id="engineHp" class="inp" type="number" min="0" placeholder="150" />
+                </div>
+                <div></div>
+            </div>
+
+            <hr class="sep" />
+
+            <!-- Images -->
+            <h2 class="h2">Fotoğraflar</h2>
+
+            <div class="upl">
+                <input id="images" type="file" accept="image/png,image/jpeg,image/webp" multiple />
+                <div class="muted tiny">PNG/JPG/WEBP • Maksimum 10 fotoğraf • İlk fotoğraf kapak olur</div>
+                <div id="preview" class="preview"></div>
+            </div>
+
+            <div class="footer">
+                <button type="button" class="btn ghost" onclick="goStoreHome()">Vazgeç</button>
+                <button type="submit" class="btn primary">İlanı Oluştur</button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script src="/js/storecreateListing.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Otoport - Store Inbox</title>
+    <link rel="stylesheet" href="/css/storeinbox.css" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo" onclick="goStoreHome()" role="button" tabindex="0">
+        <span>OTO<strong>PORT</strong></span>
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline">
+            <span>Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost" type="button" onclick="goStoreHome()">home</button>
+        <button class="ghost" type="button" onclick="goCreateListing()">ilan ver</button>
+        <button class="ghost" type="button" onclick="goNotifications()">bildirimler</button>
+        <button class="ghost" type="button" onclick="goStoreProfile()">profile store</button>
+        <button class="ghost" type="button" onclick="logout()">logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
+
+    <section class="panel inbox">
+        <div class="head">
+            <div>
+                <div class="h-title">Gelen Mesajlar</div>
+                <div class="muted tiny" id="meta">—</div>
+            </div>
+
+            <div class="right">
+                <button id="refreshBtn" class="btn" type="button">Yenile</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Sol: inquiry list -->
+            <aside class="left">
+                <div class="search">
+                    <input id="q" type="text" placeholder="İlan / müşteri ara" />
+                    <button id="searchBtn" type="button">Ara</button>
+                </div>
+
+                <div id="threads" class="threads">
+                    <!-- JS dolduracak -->
+                </div>
+            </aside>
+
+            <!-- Sağ: message thread -->
+            <section class="right-pane">
+                <div class="thread-head">
+                    <div>
+                        <div class="thread-title" id="tTitle">Bir görüşme seç</div>
+                        <div class="muted tiny" id="tMeta">—</div>
+                    </div>
+                    <div class="thread-actions">
+                        <button id="openListingBtn" class="btn" type="button" disabled>İlanı aç</button>
+                    </div>
+                </div>
+
+                <div id="messages" class="messages">
+                    <div class="muted tiny">Soldan bir görüşme seç.</div>
+                </div>
+
+                <form id="replyForm" class="reply" autocomplete="off">
+                    <input id="replyText" type="text" placeholder="Yanıt yaz..." disabled />
+                    <button id="sendBtn" class="btn primary" type="submit" disabled>Gönder</button>
+                </form>
+            </section>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">© Otoport</footer>
+<script src="/js/storeinbox.js"></script>
+</body>
+</html>

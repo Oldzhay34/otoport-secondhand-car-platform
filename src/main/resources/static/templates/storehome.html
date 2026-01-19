@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Otoport - Store Home</title>
+    <link rel="stylesheet" href="/css/storehome.css" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo" onclick="goStoreHome()" role="button" tabindex="0">
+        <span>OTO<strong>PORT</strong></span>
+    </div>
+
+    <div class="search-box">
+        <input id="q" type="text" placeholder="Mağaza içi arama" />
+        <button id="searchBtn" type="button">Ara</button>
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline">
+            <span>Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost" type="button" onclick="goCreateListing()">ilan ver</button>
+        <div class="notif-wrap">
+            <div id="notifBadge" class="notif-badge" style="display:none;">0</div>
+            <button class="ghost" type="button" onclick="goNotifications()">bildirimler</button>
+        </div>
+
+        <div class="inbox-wrap">
+            <div id="inboxBadge" class="inbox-badge" style="display:none;">0</div>
+            <button class="ghost" type="button" onclick="goInbox()">gelen mesajlar</button>
+        </div>
+
+        <button class="ghost" type="button" onclick="goStoreProfile()">profile store</button>
+        <button class="ghost" type="button" onclick="logout()">logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
+
+    <section class="panel">
+        <div class="head">
+            <div>
+                <div class="h-title">İlanlarım</div>
+                <div class="muted tiny" id="storeMeta">—</div>
+            </div>
+            <div class="muted tiny" id="countMeta">—</div>
+        </div>
+
+        <div class="list" id="list">
+            <!-- JS dolduracak -->
+        </div>
+    </section>
+</main>
+
+<footer class="footer">© Otoport</footer>
+
+<script src="/js/storehome.js"></script>
+</body>
+</html>

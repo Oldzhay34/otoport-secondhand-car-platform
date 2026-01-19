@@ -1,0 +1,58 @@
+Bentley
+
+Continental:Flying Spur-Flying Spur Speed-GT-GTC-GT Speed-GT Supersports
+Flying Spur:4.0-6.0
+Mulsanne:6.75
+
+BMW
+
+1 Serisi:116d:Standart-Comfort-First Edition Luxery Line-First Edition M Sport-First Edition Sport Line-Joy-Joy Plus-M PLus-M Sport-One Edition-Premium Line-Pure-Sport Line-Sport Plus-Urban Line
+1 Serisi: 116d ED:EfficientDynamics-Joy-Joy Plus-Sport Line-Urban Plus
+1 Serisi:116i:Standart-Advantage-Comfort-Joy Edition-M Sport-Premium-Pure-Sport-Sport Edition-Sport Line-Technology-Urban Line
+1 Serisi:118d
+1 Serisi:118i:Standart-Advantage-Comfort-First Edition M Sport-First Edition Sport Line-Joy-Joy Plus-M Plus-M Sport-One Edition-One Edition M-Premium-Premium Line-Pure-Sport Line-Sport Plus-Urban Line-Urban Plus
+1 Serisi:120:M Sport-Sport Line
+1 Serisi:120d
+1 Serisi:120i:M Sport-Standart-M Plus
+1 Serisi:128ia
+1 Serisi:128ti:Heritage
+1 Serisi :130i
+1 Serisi 135i
+2 Serisi:216 Active Tourer:Active Tourer-Luxuxry Line-M Sport-Premium Line-Prestige-Sport Line
+2 Serisi:216d Gran Coupe:First Edition Luxury Line-First Edition M Sport-First Edition Sport Line-M Sport-Sport Line
+2 Serisi:216d Gran Tourer:Gran Tourer-Joy-Luxury Line-Luxury Plus-Sport Line
+2 Serisi:218i:Luxury Line-M Sport-Prestige-Sport Line
+2 Serisi:218i Active Tourer:Active Tourer-Luxury Line-Luxury Plus-M Sport-Sport Line-Sport Plus
+2 Serisi:218i Gran Coupe:First Edition Luxury Line-First Edition M Sport-First Edition Sport Line-Luxury Line-M Sport-Sport Line
+2 Serisi:218i Gran Tourer:Gran Tourer
+2 Serisi:220d:Standart-M Sport
+2 Serisi:220 Gran Coupe:M Sport-Sportline
+2 Serisi:220i Active Tourer: Luxury Line-M Sport
+2 Serisi:230e xDrive Active Tourer:Luxury Line-M Sport
+3 Serisi:315
+3 Serisi:316
+3 Serisi:316Ci
+3 Serisi:316i:Standart-Advantage-Comfort-Compact-Exclusive-Lifestyle Edition-Luxury Line-Modern Line-M Sport-Premium-Sport-Sport Line-Technology-Technology Plus-Touring
+3 Serisi:316ti:Compact
+3 Serisi:318Ci
+3 Serisi:318d:Standart-Touring-Luxury Plus-M Plus-Premium-Prestige-Pure-Sport Plus-40th Year Edition
+3 Serisi:318i:Standart-Edition Luxury Line-Edition M Sport-Edition M Sport Executive-Edition Sport Line-Joy-Luxury Plus-M Joy-M Joy Plus-M Plus-M Sport-Premium Line-Prestige-Sport Plus-Touring-40th Year Edition
+3 Serisi:318is
+3 Serisi:318tds:Standart
+3 Serisi:318ti:Compact
+3 Serisi:320Ci
+3 Serisi:320d:Standart-Advantage-Comfort-Edition Comfort-Edition M Sport-Edition Sport Line-Luxury-Modern Line-M Sport-Premium-Premium Line-Prestige-Sport-Sport Line-Style-Technology-Techno Plus-Touring-40th Year Edition
+3 Serisi:320d GT:Gran Turismo-Luxury-Sport Line
+3 Serisi:320d xDrive:Standart-Advantage-Comfort-Edition Luxury Line-Edition M Sport-Luxury Line-Modern Line-M Sport-Premium-Premium Line-Prestige-Sport-Sport Line-Sport Plus-Techno Plus-Touring M Sport-40th Year Edition
+
+
+
+
+
+
+
+
+
+
+
+

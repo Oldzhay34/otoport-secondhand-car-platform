@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Otoport - İlan Güncelle</title>
+    <link rel="stylesheet" href="/css/storelistingedit.css" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo" onclick="goStoreHome()" role="button" tabindex="0">
+        <span>OTO<strong>PORT</strong></span>
+    </div>
+
+    <div class="search-box">
+        <input id="qTop" type="text" placeholder="Mağaza içi arama" disabled />
+        <button type="button" disabled>Ara</button>
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline">
+            <span>Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost" type="button" onclick="goCreateListing()">ilan ver</button>
+        <button class="ghost" type="button" onclick="goNotifications()">bildirimler</button>
+        <button class="ghost" type="button" onclick="goInbox()">gelen mesajlar</button>
+        <button class="ghost" type="button" onclick="goStoreProfile()">profile store</button>
+        <button class="ghost" type="button" onclick="logout()">logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <section class="panel">
+        <div id="alert" class="alert" style="display:none;"></div>
+
+        <div class="head">
+            <div>
+                <div class="h1">İlan Güncelle</div>
+                <div class="muted tiny" id="sub">—</div>
+            </div>
+
+            <div class="head-actions">
+                <button id="backBtn" class="ghost" type="button">Geri</button>
+                <button id="deleteBtn" class="btn danger" type="button">İlanı Sil</button>
+                <button id="saveBtn" class="btn primary" type="button">Kaydet</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">İlan Bilgileri</div>
+
+                <div class="form">
+                    <label>Başlık</label>
+                    <input id="title" type="text" maxlength="150" placeholder="Başlık" />
+
+                    <label>Açıklama</label>
+                    <textarea id="description" rows="5" placeholder="Açıklama"></textarea>
+
+                    <div class="row2">
+                        <div>
+                            <label>Fiyat</label>
+                            <input id="price" type="number" step="0.01" min="0" placeholder="1350000" />
+                        </div>
+                        <div>
+                            <label>Para Birimi</label>
+                            <input id="currency" type="text" maxlength="3" placeholder="TRY" />
+                        </div>
+                    </div>
+
+                    <div class="row2">
+                        <div>
+                            <label>Şehir</label>
+                            <input id="city" type="text" maxlength="60" placeholder="İstanbul" />
+                        </div>
+                        <div>
+                            <label>İlçe</label>
+                            <input id="district" type="text" maxlength="60" placeholder="Esenyurt" />
+                        </div>
+                    </div>
+
+                    <label class="chk">
+                        <input id="negotiable" type="checkbox" />
+                        <span>Pazarlık var</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Araç Bilgileri</div>
+
+                <div class="form">
+                    <div class="row2">
+                        <div>
+                            <label>Yıl (2020-2023)</label>
+                            <input id="year" type="number" min="2020" max="2023" />
+                        </div>
+                        <div>
+                            <label>Kilometre</label>
+                            <input id="kilometer" type="number" min="0" />
+                        </div>
+                    </div>
+
+                    <label>Renk</label>
+                    <input id="color" type="text" maxlength="60" placeholder="Beyaz" />
+
+                    <div class="row2">
+                        <div>
+                            <label>Motor Hacmi (cc)</label>
+                            <input id="engineVolumeCc" type="number" min="0" />
+                        </div>
+                        <div>
+                            <label>Motor Gücü (hp)</label>
+                            <input id="enginePowerHp" type="number" min="0" />
+                        </div>
+                    </div>
+
+                    <div class="muted tiny" id="carHint">—</div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<footer class="footer">© Otoport</footer>
+<script src="/js/storelistingedit.js"></script>
+</body>
+</html>

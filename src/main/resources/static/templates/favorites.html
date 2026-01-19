@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Otoport - Favoriler</title>
+    <link rel="stylesheet" href="/css/favorites.css" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo" onclick="goHome()" role="button" tabindex="0">
+        <span>OTO<strong>PORT</strong></span>
+    </div>
+
+    <div class="search-box">
+        <input id="q" type="text" placeholder="Favorilerde ara..." />
+        <button id="searchBtn" type="button">Ara</button>
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline">
+            <span>Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost" type="button" onclick="goProfile()">Profil</button>
+        <button class="ghost favnav" type="button" onclick="goFavorites()" aria-label="Favoriler">
+            <span class="heart">❤</span>
+        </button>
+        <button class="ghost" type="button" onclick="logout()">Çıkış</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
+
+    <div class="head">
+        <h2>Favorilerim</h2>
+        <div id="count" class="count">—</div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+</main>
+
+<footer class="footer">© Otoport</footer>
+<script src="/js/favorites.js"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Otoport - Filtre</title>
+    <link rel="stylesheet" href="/css/filter.css" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">
+        <span>OTO<strong>PORT</strong></span>
+    </div>
+
+    <div class="search-box">
+        <input id="q" type="text" placeholder="Mağaza, marka, model ara..." />
+        <button id="searchBtn" type="button">Ara</button>
+    </div>
+
+    <div class="actions">
+        <div class="theme-inline" title="Tema">
+            <span class="theme-label">Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span class="theme-label">Dark</span>
+        </div>
+
+        <!-- ✅ Favoriler (kalp) -->
+        <button class="ghost favnav" type="button" onclick="goFavorites()" aria-label="Favoriler" title="Favoriler">
+            <span class="heart">❤</span>
+        </button>
+
+        <a class="ghost" href="/templates/home.html">Geri</a>
+    </div>
+</header>
+
+<main class="container">
+    <aside class="filters">
+        <h3>Filtreler</h3>
+
+        <label class="lbl">
+            Marka
+            <select id="brandSelect">
+                <option value="">Hepsi</option>
+            </select>
+        </label>
+
+        <label class="lbl">
+            Model
+            <select id="modelSelect" disabled>
+                <option value="">Önce marka seç</option>
+            </select>
+        </label>
+
+        <label class="lbl">
+            Variant (varsa)
+            <select id="variantSelect" disabled>
+                <option value="">(Opsiyonel)</option>
+            </select>
+        </label>
+
+        <label class="lbl">
+            Motor (varsa)
+            <select id="engineSelect" disabled>
+                <option value="">(Opsiyonel)</option>
+            </select>
+        </label>
+
+        <label class="lbl">
+            Paket (varsa)
+            <select id="packageSelect" disabled>
+                <option value="">(Opsiyonel)</option>
+            </select>
+        </label>
+
+        <label class="lbl">
+            Kasa Tipi
+            <select id="bodyTypeSelect">
+                <option value="">Hepsi</option>
+                <option value="SEDAN">Sedan</option>
+                <option value="HATCHBACK">Hatchback</option>
+                <option value="SUV">SUV</option>
+                <option value="COUPE">Coupe</option>
+                <option value="CABRIO">Cabrio</option>
+                <option value="STATION_WAGON">Station Wagon</option>
+            </select>
+        </label>
+
+        <div class="row2">
+            <label class="lbl">
+                Yıl (Min)
+                <input id="yearMin" type="number" placeholder="2020" min="1990" max="2026" />
+            </label>
+
+            <label class="lbl">
+                Yıl (Max)
+                <input id="yearMax" type="number" placeholder="2023" min="1990" max="2026" />
+            </label>
+        </div>
+
+        <div class="row2">
+            <label class="lbl">
+                Fiyat (Min)
+                <input id="priceMin" type="number" placeholder="₺" min="0" />
+            </label>
+
+            <label class="lbl">
+                Fiyat (Max)
+                <input id="priceMax" type="number" placeholder="₺" min="0" />
+            </label>
+        </div>
+
+        <button class="apply" type="button" id="applyBtn">Uygula</button>
+        <button class="ghost full" type="button" id="resetBtn">Sıfırla</button>
+
+        <div class="mini-note">
+            Sonuçlar mağazalara göre gruplandırılır.
+        </div>
+    </aside>
+
+    <section class="results">
+        <div class="results-head">
+            <h2>Sonuçlar</h2>
+            <div id="count" class="count">Yükleniyor...</div>
+        </div>
+
+        <div id="storeGroups" class="store-groups"></div>
+    </section>
+</main>
+
+<footer class="footer">© Otoport</footer>
+
+<script src="/js/filter.js"></script>
+</body>
+</html>

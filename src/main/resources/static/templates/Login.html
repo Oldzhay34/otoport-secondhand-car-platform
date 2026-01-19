@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Otoport 2.El | Giriş</title>
+    <link rel="stylesheet" href="/css/Login.css" />
+</head>
+
+<body>
+<main class="shell">
+
+    <!-- SOL: Logo + açıklama -->
+    <section class="left">
+        <div class="brand-card">
+            <img class="brand-img" src="/imagesforapp/login_logo.png" alt="Otoport 2.El" />
+        </div>
+        <h1 class="brand-title">Otoport 2.El</h1>
+        <p class="brand-sub">Güvenli ilanlar • Galeri mesajlaşma • Ekspertiz raporu</p>
+    </section>
+
+    <!-- SAĞ: Görsel + üstünde login -->
+    <section class="right">
+        <div class="visual-bg" aria-hidden="true"></div>
+        <div class="visual-overlay" aria-hidden="true"></div>
+        <div class="visual-noise" aria-hidden="true"></div>
+
+        <div class="right-content">
+
+            <!-- Theme Switch -->
+            <div class="theme-bar">
+                <span class="theme-label">Light</span>
+
+                <label class="switch" aria-label="Tema seç">
+                    <input id="themeToggle" type="checkbox" />
+                    <span class="slider"></span>
+                </label>
+
+                <span class="theme-label">Dark</span>
+            </div>
+
+            <div class="auth-card">
+                <div class="tabs">
+                    <button class="tab active" id="tab-login" type="button">Login</button>
+                    <button class="tab" id="tab-register" type="button">Register</button>
+                </div>
+
+                <div id="msg" class="msg hidden" role="alert"></div>
+
+                <!-- Login -->
+                <form id="login-form" class="form">
+                    <h2 class="title">Login</h2>
+
+                    <label class="label">
+                        Email
+                        <input id="login-email" class="input" type="email" placeholder="ornek@mail.com" autocomplete="email" required />
+                    </label>
+
+                    <label class="label">
+                        Şifre
+                        <input id="login-password" class="input" type="password" placeholder="••••••••" autocomplete="current-password" required />
+                    </label>
+
+                    <button class="btn primary" type="submit">Giriş Yap</button>
+
+                    <button id="guest-btn" class="btn ghost" type="button">Üye olmadan devam et</button>
+
+                    <p class="hint">
+                        Hesabın yok mu?
+                        <a href="#" id="go-register">Kayıt ol</a>
+                    </p>
+                </form>
+
+                <!-- Register -->
+                <form id="register-form" class="form hidden">
+                    <h2 class="title">Register</h2>
+
+                    <div class="grid2">
+                        <label class="label">
+                            Ad
+                            <input id="reg-firstName" class="input" type="text" placeholder="Ad" required />
+                        </label>
+
+                        <label class="label">
+                            Soyad
+                            <input id="reg-lastName" class="input" type="text" placeholder="Soyad" required />
+                        </label>
+                    </div>
+
+                    <label class="label">
+                        Email
+                        <input id="reg-email" class="input" type="email" placeholder="ornek@mail.com" autocomplete="email" required />
+                    </label>
+
+                    <label class="label">
+                        Şifre
+                        <input id="reg-password" class="input" type="password" placeholder="••••••••" autocomplete="new-password" required />
+                    </label>
+
+                    <label class="label">
+                        Telefon (opsiyonel)
+                        <input id="reg-phone" class="input" type="tel" placeholder="05xx..." />
+                    </label>
+
+                    <label class="checkbox">
+                        <input id="reg-consent" type="checkbox" />
+                        Kampanya/duyuru almak istiyorum
+                    </label>
+
+                    <button class="btn primary" type="submit">Kayıt Ol</button>
+
+                    <p class="hint">
+                        Zaten hesabın var mı?
+                        <a href="#" id="go-login">Giriş yap</a>
+                    </p>
+                </form>
+            </div>
+
+            <footer class="footer">© Otoport 2.El</footer>
+        </div>
+    </section>
+
+</main>
+
+<script src="/js/auth.js"></script>
+</body>
+</html>
