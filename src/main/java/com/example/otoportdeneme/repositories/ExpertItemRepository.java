@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ExpertItemRepository extends JpaRepository<ExpertItem, Long> {
     List<ExpertItem> findByReportId(Long reportId);
+    void deleteByReportId(Long reportId);
 }

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin • Notification Oluştur</title>
+    <link rel="stylesheet" href="/css/createnotification.css" />
+</head>
+
+<body data-theme="dark">
+<header class="topbar">
+    <div class="brand" role="button" tabindex="0" onclick="goAdminHome()">OTOPORT • Admin</div>
+
+    <div class="right">
+        <label class="theme">
+            <span>Light</span>
+            <input id="themeToggle" type="checkbox" />
+            <span>Dark</span>
+        </label>
+
+        <button class="btn ghost" type="button" onclick="goAdminHome()">Home</button>
+        <button id="logoutBtn" class="btn danger" type="button">logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <div id="alert" class="alert" style="display:none;"></div>
+
+    <section class="card">
+        <div class="head">
+            <h1>Store Notification Oluştur</h1>
+            <div class="muted">Bir mağazaya veya tüm mağazalara sistem bildirimi gönder.</div>
+        </div>
+
+        <form id="form" class="form">
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Alıcı (Store) *</label>
+                    <select id="storeId" class="inp" required>
+                        <option value="ALL">Tüm Mağazalar</option>
+                    </select>
+                    <div class="tiny muted">Tek store seçersen sadece o mağazaya gider.</div>
+                </div>
+
+                <div>
+                    <label class="lbl">Notification Type *</label>
+                    <select id="type" class="inp" required>
+                        <option value="SYSTEM">SYSTEM</option>
+                        <option value="NEW_MESSAGE">NEW_MESSAGE</option>
+                        <option value="SAVED_SEARCH_MATCH">SAVED_SEARCH_MATCH</option>
+                        <option value="LISTING_APPROVED">LISTING_APPROVED</option>
+                        <option value="LISTING_REJECTED">LISTING_REJECTED</option>
+                        <option value="STORE_VERIFIED">STORE_VERIFIED</option>
+                    </select>
+                    <div class="tiny muted">Admin genelde SYSTEM kullanır.</div>
+                </div>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label class="lbl">Başlık *</label>
+                    <input id="title" class="inp" maxlength="180" required placeholder="Örn: Sistem Bakımı" />
+                </div>
+                <div>
+                    <label class="lbl">Payload JSON (ops.)</label>
+                    <input id="payloadJson" class="inp" maxlength="2000" placeholder='Örn: {"url":"/templates/storehome.html"}' />
+                </div>
+            </div>
+
+            <div>
+                <label class="lbl">Mesaj</label>
+                <textarea id="message" class="inp area" maxlength="500" rows="5" placeholder="Bildirimin içeriği..."></textarea>
+                <div class="tiny muted">Maks 500 karakter.</div>
+            </div>
+
+            <div class="footer">
+                <button type="button" class="btn ghost" onclick="goAdminHome()">Vazgeç</button>
+                <button type="submit" class="btn primary">Gönder</button>
+            </div>
+        </form>
+    </section>
+
+    <footer class="foot">© Otoport</footer>
+</main>
+
+<script src="/js/createnotification.js" defer></script>
+</body>
+</html>

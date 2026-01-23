@@ -279,6 +279,7 @@ function renderListings(cards) {
 
 
         listingGrid.appendChild(div);
+
     });
 }
 
@@ -330,3 +331,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         showAlert("err", e.message || "Mağaza sayfası yüklenemedi.");
     }
 });
+// =====================================================
+// HERO SHRINK (scroll)
+// =====================================================
+(function initHeroShrink(){
+    const TH = 60; // kaç px scroll sonra compact
+    let on = false;
+
+    window.addEventListener("scroll", () => {
+        const should = window.scrollY > TH;
+        if (should === on) return;
+        on = should;
+        document.body.classList.toggle("hero-compact", should);
+    }, { passive: true });
+})();
+
+// =====================================================
+// RESULT COUNT (live update hook)
+// - listingleri render ettiğin yerde çağır:
+//   setResultCount(list.length)
+// =====================================================
+function setResultCount(n){
+    const el = document.getElementById("resultCount");
+    if(!el) return;
+
+    const b = el.querySelector("b") || el;
+    b.textContent = String(n);
+
+    el.classList.remove("bump");
+    // reflow trick
+    void el.offsetWidth;
+    el.classList.add("bump");
+}
+window.setResultCount = setResultCount;
+

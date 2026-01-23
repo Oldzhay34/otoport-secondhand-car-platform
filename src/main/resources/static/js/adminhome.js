@@ -79,6 +79,11 @@ async function apiGet(path) {
 
     return body;
 }
+function goAuditLogs() {
+    window.location.href = "/templates/auditlog.html";
+}
+window.goAuditLogs = goAuditLogs;
+
 
 async function postNoAuth(path) {
     try {
@@ -107,10 +112,15 @@ async function loadDaily() {
 window.addEventListener("DOMContentLoaded", async () => {
     initThemeToggle();
 
+    $("createNotifBtn")?.addEventListener("click", () => {
+        window.location.href = "/templates/createnotification.html";
+    });
+
     $("logoutBtn")?.addEventListener("click", () => {
         localStorage.removeItem("token");
         window.location.href = "/templates/login.html";
     });
+
 
     try {
         showErr("");

@@ -45,6 +45,16 @@ public class StoreListingManagementController {
                                       @Valid @RequestBody StoreCarUpdateRequest req,
                                       HttpServletRequest httpReq) {
 
+        System.out.println(">>> UPDATE REQ expertReport is null? " + (req.getExpertReport() == null));
+        if (req.getExpertReport() != null) {
+            System.out.println(">>> expertReport.items size = " +
+                    (req.getExpertReport().getItems() == null ? "null" : req.getExpertReport().getItems().size()));
+            if (req.getExpertReport().getItems() != null && !req.getExpertReport().getItems().isEmpty()) {
+                System.out.println(">>> first item part=" + req.getExpertReport().getItems().get(0).getPart()
+                        + " status=" + req.getExpertReport().getItems().get(0).getStatus());
+            }
+        }
+
         Long storeId = resolveUserId(auth);
         StoreListingEditDto out = storeListingService.updateMyListing(storeId, listingId, req);
 

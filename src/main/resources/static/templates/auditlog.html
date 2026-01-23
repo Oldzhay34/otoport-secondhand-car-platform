@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Otoport - Audit Loglar</title>
+    <link rel="stylesheet" href="/css/auditlog.css" />
+</head>
+
+<body data-theme="dark">
+<header class="topbar">
+    <div class="logo" onclick="goAdminHome()" role="button" tabindex="0">
+        <span>OTO<strong>PORT</strong></span>
+        <em class="tag">Admin</em>
+    </div>
+
+    <div class="actions">
+        <button class="ghost" type="button" onclick="goAdminHome()">Admin Home</button>
+        <button class="ghost" type="button" onclick="logout()">Logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <section class="panel">
+        <div class="head">
+            <div>
+                <div class="h1">Audit Loglar</div>
+                <div class="muted tiny" id="sub">—</div>
+            </div>
+
+            <div class="head-actions">
+                <label class="lbl">Sıralama</label>
+                <select id="sortSel" class="inp">
+                    <option value="desc">Yeni → Eski</option>
+                    <option value="asc">Eski → Yeni</option>
+                </select>
+
+                <label class="lbl">Limit</label>
+                <select id="limitSel" class="inp">
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200" selected>200</option>
+                    <option value="500">500</option>
+                </select>
+
+                <button id="refreshBtn" class="btn primary" type="button">Yenile</button>
+            </div>
+        </div>
+
+        <div id="alert" class="alert" style="display:none;"></div>
+
+        <div class="table-wrap">
+            <table class="tbl">
+                <thead>
+                <tr>
+                    <th>Zaman</th>
+                    <th>Actor</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Details</th>
+                    <th>IP</th>
+                    <th>UserAgent</th>
+                </tr>
+                </thead>
+                <tbody id="rows">
+                <tr><td colspan="7" class="muted">Yükleniyor…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="/js/auditlog.js"></script>
+</body>
+</html>

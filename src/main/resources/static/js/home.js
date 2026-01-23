@@ -56,12 +56,8 @@ function escapeHtml(s) {
 }
 
 function safeImageUrl(url) {
-    // URL’de Türkçe karakter olursa encode et (kızıler.jpg gibi)
-    // url "/uploads/kızıler.jpg" ise "/uploads/" kısmını bozmadan sadece dosya adını encode ediyoruz.
     if (!url) return "/imagesforapp/logo2.png";
-
     try {
-        // mutlak değilse
         if (url.startsWith("/uploads/")) {
             const name = url.substring("/uploads/".length);
             return "/uploads/" + encodeURIComponent(name);
@@ -116,14 +112,34 @@ function normalizeStoreDto(s) {
     const city = s?.city ?? "";
     const district = s?.district ?? "";
 
-    // Eğer StoreCardDto’na logoUrl eklemediysen bu hep null kalır, fallback kullanır
+    // image/logo
     const image =
         s?.logoUrl ||
         s?.logoURL ||
         s?.image ||
         "/imagesforapp/logo2.png";
 
-    return { id, name, city, district, image };
+    // --- Badge / Trust fields (opsiyonel) ---
+    // Backend’in hangi alanları gönderdiğini bilmediğimiz için olabildiğince tolerant okuyoruz.
+    const listingCount =
+        s?.listingCount ??
+        s?.adsCount ??
+        s?.carCount ??
+        s?.count ??
+        null;
+
+    const verified =
+        s?.verified ??
+        s?.isVerified ??
+        s?.trusted ??
+        false;
+
+    const rating =
+        s?.rating ??
+        s?.score ??
+        null;
+
+    return { id, name, city, district, image, listingCount, verified, rating };
 }
 
 function renderStores(list) {
@@ -140,7 +156,32 @@ function renderStores(list) {
         div.className = "store-card";
 
         const loc = [s.city, s.district].filter(Boolean).join(" • ");
+        const cityOnly = s.city || "—";
+        const countText = (typeof s.listingCount === "number" || typeof s.listingCount === "string")
+            ? `${escapeHtml(s.listingCount)} ilan`
+            : null;
+
+        // Badge HTML
+        const badgesHtml = `
+      <div class="store-badges">
+        ${s.verified ? `<span class="badge verified">✔ Doğrulanmış</span>` : ``}
+        ${countText ? `<span class="badge count">${countText}</span>` : ``}
+        <span class="badge city">${escapeHtml(cityOnly)}</span>
+      </div>
+    `;
+
+        // Trust HTML (rating opsiyonel)
+        const trustHtml = `
+      <div class="store-trust">
+        <span class="trust-pill">🛡️ Güvenilir</span>
+        ${s.rating ? `<span class="trust-pill">⭐ ${escapeHtml(s.rating)}</span>` : ``}
+      </div>
+    `;
+
         div.innerHTML = `
+      ${badgesHtml}
+      ${trustHtml}
+
       <img src="${escapeHtml(safeImageUrl(s.image))}" alt="">
       <div class="store-info">
         <h4>${escapeHtml(s.name)}</h4>
@@ -165,7 +206,6 @@ async function loadStores() {
         renderStores(normalized);
     } catch (e) {
         console.error("HOME STORES ERROR:", e);
-        // fallback: hiç olmazsa boş göstermeyelim
         renderStores([]);
     }
 }

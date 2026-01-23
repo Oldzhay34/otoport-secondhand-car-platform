@@ -1,42 +1,31 @@
 package com.example.otoportdeneme.dto_Requests;
 
-import jakarta.validation.constraints.*;
+import com.example.otoportdeneme.dto_Objects.ExpertReportDto;
+import jakarta.validation.constraints.Size;
+
 import java.math.BigDecimal;
 
 public class StoreCarUpdateRequest {
 
-    @Size(max = 150)
     private String title;
-
     private String description;
-
-    @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal price;
-
     @Size(min = 3, max = 3)
     private String currency;
-
     private Boolean negotiable;
-
-    @Size(max = 60)
     private String city;
-
-    @Size(max = 60)
     private String district;
 
-    // ---- Car fields (opsiyonel güncelleme) ----
-    @Min(2020) @Max(2023)
     private Integer year;
-
-    @Min(0)
     private Integer kilometer;
-
-    @Size(max = 60)
     private String color;
-
-    // engine fields (opsiyonel)
     private Integer engineVolumeCc;
     private Integer enginePowerHp;
+
+    // ✅ MUST: exact name + public getter/setter
+    private ExpertReportDto expertReport;
+
+    public StoreCarUpdateRequest() {}
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -73,4 +62,7 @@ public class StoreCarUpdateRequest {
 
     public Integer getEnginePowerHp() { return enginePowerHp; }
     public void setEnginePowerHp(Integer enginePowerHp) { this.enginePowerHp = enginePowerHp; }
+
+    public ExpertReportDto getExpertReport() { return expertReport; }
+    public void setExpertReport(ExpertReportDto expertReport) { this.expertReport = expertReport; }
 }

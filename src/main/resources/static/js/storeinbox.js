@@ -4,13 +4,11 @@ const API_BASE = "http://localhost:8080";
 const TOKEN_KEY = "token";
 const THEME_KEY = "theme";
 
-// Endpoints (backend controller aşağıda)
 const INQUIRIES_URL = `${API_BASE}/api/store/inquiries`;
 const THREAD_URL = (inquiryId) => `${API_BASE}/api/store/inquiries/${inquiryId}`;
 const REPLY_URL = (inquiryId) => `${API_BASE}/api/store/inquiries/${inquiryId}/reply`;
 const MARK_READ_URL = (inquiryId) => `${API_BASE}/api/store/inquiries/${inquiryId}/read`;
 
-// (opsiyonel) listing'e gitmek için
 const LISTING_PAGE = (listingId) => `/templates/storelistingdetail.html?id=${encodeURIComponent(listingId)}`;
 
 function $(id){ return document.getElementById(id); }
@@ -33,10 +31,24 @@ const replyForm = $("replyForm");
 const replyText = $("replyText");
 const sendBtn = $("sendBtn");
 
+/* Bottom sheet DOM */
+const sheetBackdrop = $("sheetBackdrop");
+const mobileSheet = $("mobileSheet");
+const sheetClose = $("sheetClose");
+const sheetTitle = $("sheetTitle");
+const sheetSub = $("sheetSub");
+const sheetBody = $("sheetBody");
+const rightPane = $("rightPane");
+
 let threadsCache = [];
 let activeInquiryId = null;
 let activeListingId = null;
 
+/* right-pane’i mobilde sheet’e taşıyıp geri koymak için */
+let rightPaneHomeParent = null;
+let rightPaneHomeNextSibling = null;
+
+/* ---------------- ALERT ---------------- */
 function showAlert(type, msg){
     if (!alertBox) return;
     alertBox.className = "alert " + (type === "ok" ? "ok" : "err");
@@ -49,6 +61,7 @@ function hideAlert(){
     alertBox.textContent = "";
 }
 
+/* ---------------- THEME ---------------- */
 function applyThemeFromStorage(){
     const saved = localStorage.getItem(THEME_KEY) || "dark";
     document.body.setAttribute("data-theme", saved);
@@ -65,6 +78,7 @@ function initThemeToggle(){
     });
 }
 
+/* ---------------- FETCH ---------------- */
 async function fetchJson(url, options = {}){
     const res = await fetch(url, { ...options, cache:"no-store" });
     const ct = res.headers.get("content-type") || "";
@@ -79,6 +93,7 @@ async function fetchJson(url, options = {}){
     return body;
 }
 
+/* ---------------- UTIL ---------------- */
 function escapeHtml(s){
     return String(s ?? "").replace(/[&<>"']/g, m => ({
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
@@ -98,6 +113,7 @@ function fmtDate(iso){
     }
 }
 
+/* ---------------- NAV ---------------- */
 function logout(){
     localStorage.removeItem(TOKEN_KEY);
     window.location.href = "/templates/Login.html";
@@ -116,6 +132,62 @@ window.goNotifications = goNotifications;
 function goStoreProfile(){ window.location.href = "/templates/storeprofile.html"; }
 window.goStoreProfile = goStoreProfile;
 
+/* ---------------- MOBILE SHEET ---------------- */
+function isMobile(){
+    return window.matchMedia("(max-width: 980px)").matches;
+}
+function lockScroll(on){
+    document.documentElement.style.overflow = on ? "hidden" : "";
+    document.body.style.overflow = on ? "hidden" : "";
+}
+
+function openSheet(){
+    if (!mobileSheet || !sheetBackdrop) return;
+
+    // right-pane'i sheet'e taşı
+    if (rightPane && sheetBody && rightPane.parentElement !== sheetBody){
+        rightPaneHomeParent = rightPane.parentElement;
+        rightPaneHomeNextSibling = rightPane.nextElementSibling;
+
+        sheetBody.innerHTML = "";
+        sheetBody.appendChild(rightPane);
+
+        sheetTitle.textContent = tTitle?.textContent?.trim() || "Mesajlar";
+        sheetSub.textContent = tMeta?.textContent?.trim() || "—";
+    }
+
+    mobileSheet.classList.add("show");
+    sheetBackdrop.classList.add("show");
+    mobileSheet.setAttribute("aria-hidden", "false");
+    sheetBackdrop.setAttribute("aria-hidden", "false");
+    lockScroll(true);
+
+    requestAnimationFrame(() => {
+        const msg = $("messages");
+        if (msg) msg.scrollTop = msg.scrollHeight;
+    });
+}
+
+function closeSheet(){
+    if (!mobileSheet || !sheetBackdrop) return;
+
+    mobileSheet.classList.remove("show");
+    sheetBackdrop.classList.remove("show");
+    mobileSheet.setAttribute("aria-hidden", "true");
+    sheetBackdrop.setAttribute("aria-hidden", "true");
+    lockScroll(false);
+
+    // right-pane'i eski yerine geri koy
+    if (rightPaneHomeParent && rightPane && rightPane.parentElement === sheetBody){
+        if (rightPaneHomeNextSibling && rightPaneHomeNextSibling.parentElement === rightPaneHomeParent){
+            rightPaneHomeParent.insertBefore(rightPane, rightPaneHomeNextSibling);
+        } else {
+            rightPaneHomeParent.appendChild(rightPane);
+        }
+    }
+}
+
+/* ---------------- THREAD LIST ---------------- */
 function setActiveThread(id){
     activeInquiryId = id;
     [...(threadsEl?.querySelectorAll(".thread") || [])].forEach(el => {
@@ -130,15 +202,15 @@ function renderThreadRow(t){
     const last = t.lastMessage || "—";
 
     return `
-    <div class="thread" data-id="${t.inquiryId}">
+    <div class="thread ${unread ? "unread" : ""}" data-id="${t.inquiryId}">
       <div class="t">${escapeHtml(listing)}</div>
       <div class="s">
         <span>${escapeHtml(who)}</span>
         <span>•</span>
         <span>${escapeHtml(fmtDate(t.lastSentAt))}</span>
-        ${unread ? `<span class="pill unread">${t.unreadCount}</span>` : ``}
+        ${unread ? `<span class="pill unread">${escapeHtml(t.unreadCount)}</span>` : ``}
       </div>
-      <div class="muted tiny" style="margin-top:6px;">${escapeHtml(last)}</div>
+      <div class="p">${escapeHtml(last)}</div>
     </div>
   `;
 }
@@ -166,7 +238,9 @@ async function loadThreads(q){
         return;
     }
 
-    const url = q && q.trim() ? `${INQUIRIES_URL}?q=${encodeURIComponent(q.trim())}` : INQUIRIES_URL;
+    const url = q && q.trim()
+        ? `${INQUIRIES_URL}?q=${encodeURIComponent(q.trim())}`
+        : INQUIRIES_URL;
 
     const data = await fetchJson(url, {
         method:"GET",
@@ -186,6 +260,7 @@ async function loadThreads(q){
         threadsEl.innerHTML = `<div class="muted tiny">Görüşme yok.</div>`;
         return;
     }
+
     threadsEl.innerHTML = items.map(renderThreadRow).join("");
 }
 
@@ -198,7 +273,6 @@ async function loadThread(inquiryId){
         headers: { Authorization: `Bearer ${token.trim()}` }
     });
 
-    // Header
     activeListingId = data.listingId || null;
     tTitle.textContent = data.listingTitle || "İlan";
     const who = data.clientName || data.guestName || data.clientEmail || data.guestEmail || "Müşteri";
@@ -206,7 +280,6 @@ async function loadThread(inquiryId){
 
     openListingBtn.disabled = !activeListingId;
 
-    // Messages
     const msgs = Array.isArray(data.messages) ? data.messages : [];
     if (!messagesEl) return;
 
@@ -217,18 +290,21 @@ async function loadThread(inquiryId){
         messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // Reply enable
     replyText.disabled = false;
     sendBtn.disabled = false;
 
-    // Açınca okundu yap (store)
     await fetchJson(MARK_READ_URL(inquiryId), {
         method:"PATCH",
         headers: { Authorization: `Bearer ${token.trim()}` }
     }).catch(()=>{});
 
-    // Listeyi refresh (unread pill kalksın)
     await loadThreads(qEl?.value || "").catch(()=>{});
+
+    // sheet başlığını güncelle (açıksa)
+    if (mobileSheet?.classList.contains("show")){
+        sheetTitle.textContent = tTitle?.textContent?.trim() || "Mesajlar";
+        sheetSub.textContent = tMeta?.textContent?.trim() || "—";
+    }
 }
 
 async function sendReply(inquiryId, text){
@@ -243,6 +319,7 @@ async function sendReply(inquiryId, text){
     });
 }
 
+/* ---------------- INIT ---------------- */
 document.addEventListener("DOMContentLoaded", async () => {
     applyThemeFromStorage();
     initThemeToggle();
@@ -271,11 +348,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     threadsEl?.addEventListener("click", async (e) => {
         const row = e.target.closest(".thread[data-id]");
         if (!row) return;
+
         const inquiryId = Number(row.dataset.id);
         if (!Number.isFinite(inquiryId)) return;
 
         setActiveThread(inquiryId);
         await loadThread(inquiryId);
+
+        if (isMobile()) openSheet();
     });
 
     openListingBtn?.addEventListener("click", () => {
@@ -297,6 +377,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         } catch(err){
             showAlert("err", err.message || "Mesaj gönderilemedi.");
         }
+    });
+
+    // sheet events
+    sheetBackdrop?.addEventListener("click", closeSheet);
+    sheetClose?.addEventListener("click", closeSheet);
+    window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeSheet();
+    });
+
+    // ekran büyürse sheet kapat & right-pane’i geri koy
+    window.addEventListener("resize", () => {
+        if (!isMobile()) closeSheet();
     });
 
     try{

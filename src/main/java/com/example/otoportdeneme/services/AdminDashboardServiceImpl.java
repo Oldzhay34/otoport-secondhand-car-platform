@@ -102,7 +102,8 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                         deletes.getOrDefault(s.getId(), 0L),
                         updates.getOrDefault(s.getId(), 0L)
                 ))
-                .sorted(Comparator.comparingLong((StoreListingActivityDto x) -> (x.getCreates() + x.getDeletes() + x.getUpdates())).reversed())
+                .sorted(Comparator.comparingLong((StoreListingActivityDto x) ->
+                        (x.getCreates() + x.getDeletes() + x.getUpdates())).reversed())
                 .toList();
     }
 
@@ -117,7 +118,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         List<AuditLog> logs = auditLogRepository
                 .findByCreatedAtBetweenOrderByCreatedAtDesc(start, end, PageRequest.of(0, limit));
 
-
+        // ✅ AuditRowDto yeni constructor: ipAddress + userAgent eklendi
         return logs.stream()
                 .map(a -> new AuditRowDto(
                         a.getCreatedAt(),
@@ -126,7 +127,9 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                         a.getAction() == null ? null : a.getAction().name(),
                         a.getEntityType(),
                         a.getEntityId(),
-                        a.getDetails()
+                        a.getDetails(),
+                        a.getIpAddress(),
+                        a.getUserAgent()
                 ))
                 .toList();
     }

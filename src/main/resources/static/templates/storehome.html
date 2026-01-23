@@ -6,20 +6,21 @@
     <title>Otoport - Store Home</title>
     <link rel="stylesheet" href="/css/storehome.css" />
 </head>
-<body>
+<body data-theme="dark">
 
 <header class="topbar">
-    <div class="logo" onclick="goStoreHome()" role="button" tabindex="0">
+    <div class="logo" onclick="goStoreHome()" role="button" tabindex="0" aria-label="Store Home">
         <span>OTO<strong>PORT</strong></span>
     </div>
 
-    <div class="search-box">
+    <!-- desktop search -->
+    <div class="search-box" aria-label="Mağaza içi arama">
         <input id="q" type="text" placeholder="Mağaza içi arama" />
         <button id="searchBtn" type="button">Ara</button>
     </div>
 
     <div class="user-actions">
-        <div class="theme-inline">
+        <div class="theme-inline" aria-label="Tema seçimi">
             <span>Light</span>
             <label class="switch" aria-label="Tema seç">
                 <input id="themeToggle" type="checkbox" />
@@ -28,7 +29,11 @@
             <span>Dark</span>
         </div>
 
+        <!-- mobilde arama aç -->
+        <button class="ghost icon-only" type="button" id="openSearch" aria-label="Ara">🔎</button>
+
         <button class="ghost" type="button" onclick="goCreateListing()">ilan ver</button>
+
         <div class="notif-wrap">
             <div id="notifBadge" class="notif-badge" style="display:none;">0</div>
             <button class="ghost" type="button" onclick="goNotifications()">bildirimler</button>
@@ -63,6 +68,41 @@
 </main>
 
 <footer class="footer">© Otoport</footer>
+
+<!-- ✅ Mobil arama modal -->
+<div class="modal" id="searchModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="1"></div>
+
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-label="Arama">
+        <div class="modal-head">
+            <div class="modal-title">Mağaza içi arama</div>
+            <button class="ghost icon-only" type="button" id="closeSearch" aria-label="Kapat">✕</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="modal-search">
+                <input id="qMobile" type="text" placeholder="Marka, model, şehir..." />
+                <button id="searchBtnMobile" class="btn primary small" type="button">Ara</button>
+            </div>
+            <div class="muted tiny">İpucu: “Audi”, “2022”, “İstanbul” gibi arayabilirsin.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Sticky Action Bar -->
+<div class="sticky-bar" id="stickyBar" aria-label="Hızlı işlemler">
+    <button class="sbtn" type="button" onclick="goCreateListing()">
+        <span class="si">＋</span><span class="st">Yeni İlan</span>
+    </button>
+
+    <button class="sbtn" type="button" id="stickySearch">
+        <span class="si">🔎</span><span class="st">Ara</span>
+    </button>
+
+    <button class="sbtn danger" type="button" onclick="goInbox()">
+        <span class="si">✉</span><span class="st">Inbox</span>
+    </button>
+</div>
 
 <script src="/js/storehome.js"></script>
 </body>

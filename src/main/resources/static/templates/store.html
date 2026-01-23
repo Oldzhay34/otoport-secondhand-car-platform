@@ -9,23 +9,23 @@
 <body>
 
 <header class="topbar">
-    <div class="logo" onclick="goHome()" role="button" tabindex="0">
+    <div class="logo" onclick="goHome()" role="button" tabindex="0" aria-label="Ana sayfa">
         <span>OTO<strong>PORT</strong></span>
     </div>
 
-    <div class="search-box">
+    <div class="search-box" aria-label="Site içi arama">
         <input type="text" placeholder="Arama motoru" />
         <button type="button">Ara</button>
     </div>
 
     <div class="user-actions">
-        <div class="theme-inline">
-            <span>Light</span>
+        <div class="theme-inline" aria-label="Tema seçimi">
+            <span class="theme-label">Light</span>
             <label class="switch" aria-label="Tema seç">
                 <input id="themeToggle" type="checkbox" />
                 <span class="slider"></span>
             </label>
-            <span>Dark</span>
+            <span class="theme-label">Dark</span>
         </div>
 
         <button class="ghost favnav" type="button" onclick="goFavorites()" aria-label="Favoriler">
@@ -40,10 +40,13 @@
 
     <!-- LEFT FILTERS -->
     <aside class="filters">
-        <h3>Mağaza içi filtre</h3>
+        <div class="filters-head">
+            <h3>Mağaza içi filtre</h3>
+            <div class="filters-sub">İlanları daralt, daha hızlı karar ver.</div>
+        </div>
 
-        <label>
-            Kasa Tipi
+        <label class="lbl">
+            <span>Kasa Tipi</span>
             <select id="bodyType">
                 <option value="">(Hepsi)</option>
                 <option value="SEDAN">Sedan</option>
@@ -57,49 +60,61 @@
             </select>
         </label>
 
-        <label>
-            Min Yıl
-            <input id="yearMin" type="number" min="1990" max="2026" placeholder="2020" />
-        </label>
+        <div class="row2">
+            <label class="lbl">
+                <span>Min Yıl</span>
+                <input id="yearMin" type="number" min="1990" max="2026" placeholder="2020" />
+            </label>
+            <label class="lbl">
+                <span>Max Yıl</span>
+                <input id="yearMax" type="number" min="1990" max="2026" placeholder="2023" />
+            </label>
+        </div>
 
-        <label>
-            Max Yıl
-            <input id="yearMax" type="number" min="1990" max="2026" placeholder="2023" />
-        </label>
+        <div class="row2">
+            <label class="lbl">
+                <span>Min Fiyat</span>
+                <input id="priceMin" type="number" min="0" placeholder="₺" />
+            </label>
+            <label class="lbl">
+                <span>Max Fiyat</span>
+                <input id="priceMax" type="number" min="0" placeholder="₺" />
+            </label>
+        </div>
 
-        <label>
-            Min Fiyat
-            <input id="priceMin" type="number" min="0" placeholder="₺" />
-        </label>
-
-        <label>
-            Max Fiyat
-            <input id="priceMax" type="number" min="0" placeholder="₺" />
-        </label>
-
-        <label>
-            Listeleme Limiti
+        <label class="lbl">
+            <span>Listeleme Limiti</span>
             <input id="limit" type="number" min="1" max="200" value="30" />
         </label>
 
         <button class="apply" type="button" id="applyBtn">Uygula</button>
         <button class="ghost full" type="button" id="resetBtn">Sıfırla</button>
 
-        <p class="muted tiny">Not: Şimdilik özellik (feature) filtreleri yok.</p>
+        <div class="mini-note">
+            Not: Şimdilik özellik (feature) filtreleri yok.
+        </div>
     </aside>
 
     <!-- MAIN -->
     <section class="content">
 
         <!-- HERO -->
-        <div class="hero">
-            <div class="hero-img" id="storeHeroImg">
+        <div class="hero" id="hero">
+            <div class="hero-img" id="storeHeroImg" aria-hidden="true">
                 <div class="hero-badge" id="verifiedBadge" style="display:none;">✔ Verified</div>
             </div>
 
             <div class="hero-info">
-                <h2 id="storeName" class="store-title">Mağaza</h2>
-                <div class="store-sub" id="storeSub">—</div>
+                <div class="hero-top">
+                    <div>
+                        <h2 id="storeName" class="store-title">Mağaza</h2>
+                        <div class="store-sub" id="storeSub">—</div>
+                    </div>
+
+                    <div class="result-count" id="resultCount">
+                        <b>0</b> ilan
+                    </div>
+                </div>
 
                 <div class="store-meta">
                     <div class="meta-item">
@@ -129,7 +144,11 @@
         <div id="alert" class="alert" style="display:none;"></div>
 
         <!-- LISTINGS -->
-        <h3 class="section-title">İlanlar</h3>
+        <div class="section-head">
+            <h3 class="section-title">İlanlar</h3>
+            <div class="section-hint muted">Kartlara tıklayarak detaya gidebilirsin.</div>
+        </div>
+
         <div id="listingGrid" class="listing-grid"></div>
 
     </section>

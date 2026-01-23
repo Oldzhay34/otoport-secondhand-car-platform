@@ -6,11 +6,12 @@
     <title>Otoport - İlan Güncelle</title>
     <link rel="stylesheet" href="/css/storelistingedit.css" />
 </head>
-<body>
 
+<body data-theme="dark">
 <header class="topbar">
     <div class="logo" onclick="goStoreHome()" role="button" tabindex="0">
         <span>OTO<strong>PORT</strong></span>
+        <em class="tag">Store</em>
     </div>
 
     <div class="search-box">
@@ -125,12 +126,66 @@
                     <div class="muted tiny" id="carHint">—</div>
                 </div>
             </div>
-        </div>
 
+            <!-- ✅ EXPERTIZ / KROKI (FULL WIDTH) -->
+            <div class="card span2">
+                <div class="card-top">
+                    <div>
+                        <div class="card-title">Expertiz / Kroki</div>
+                        <div class="muted tiny" id="sketchHint">Tüm parçalar orijinal</div>
+                    </div>
+
+                    <div class="card-actions">
+                        <button id="resetExpertBtn" class="ghost" type="button">Sıfırla</button>
+                    </div>
+                </div>
+
+                <div class="sketch-layout">
+                    <!-- SOL: kroki -->
+                    <div class="sketch-stage">
+                        <img class="sketch-layer" id="sketchBase" alt="Ekspertiz Kroki" />
+                        <div class="sketch-outline" id="sketchOutline"></div>
+                        <div class="sketch-parts" id="sketchParts"></div>
+                    </div>
+
+                    <!-- SAĞ: seçim paneli -->
+                    <aside class="sketch-side">
+                        <div class="side-title">Parça seç</div>
+                        <select id="partSelect" class="inp">
+                            <!-- JS dolduracak -->
+                        </select>
+
+                        <div class="side-title" style="margin-top:10px;">Durum seç</div>
+                        <select id="statusSelect" class="inp">
+                            <option value="ORIGINAL">Orijinal</option>
+                            <option value="PAINTED">Boyalı</option>
+                            <option value="LOCAL_PAINT">Lokal Boya</option>
+                            <option value="REPLACED">Değişen</option>
+                        </select>
+
+                        <button id="applyPartStatusBtn" type="button" class="btn primary" style="margin-top:12px;">
+                            Uygula
+                        </button>
+
+                        <div class="muted tiny" id="sideInfo" style="margin-top:10px;">
+                            Parçayı seç, durumu seç, uygula.
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="sketch-legend">
+                    <span class="lg"><i class="dot green"></i> Orijinal</span>
+                    <span class="lg"><i class="dot blue"></i> Boyalı</span>
+                    <span class="lg"><i class="dot orange"></i> Lokal Boya</span>
+                    <span class="lg"><i class="dot red"></i> Değişen</span>
+                </div>
+            </div>
+
+        </div>
     </section>
 </main>
 
 <footer class="footer">© Otoport</footer>
-<script src="/js/storelistingedit.js"></script>
+<script src="/js/storelistingedit.js?v=20260122"></script>
 </body>
 </html>

@@ -14,9 +14,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class StoreListingServiceImpl implements StoreListingService {
 
     private final ListingRepository listingRepository;
+    private final ExpertReportService expertReportService;
 
-    public StoreListingServiceImpl(ListingRepository listingRepository) {
+    public StoreListingServiceImpl(ListingRepository listingRepository,
+                                   ExpertReportService expertReportService) {
         this.listingRepository = listingRepository;
+        this.expertReportService = expertReportService;
     }
 
     @Override
@@ -32,6 +35,8 @@ public class StoreListingServiceImpl implements StoreListingService {
     @Override
     @Transactional
     public StoreListingEditDto updateMyListing(Long storeId, Long listingId, StoreCarUpdateRequest req) {
+
+
         Listing l = listingRepository.findById(listingId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found"));
 
@@ -57,6 +62,13 @@ public class StoreListingServiceImpl implements StoreListingService {
         }
 
         listingRepository.save(l);
+
+
+        if (req.getExpertReport() != null && l.getCar() != null && l.getCar().getId() != null) {
+            expertReportService.upsertByCarId(l.getCar().getId(), req.getExpertReport());
+        }
+        System.out.println(">>> service req.expertReport = " + req.getExpertReport());
+
         return toEditDto(l);
     }
 
@@ -94,6 +106,9 @@ public class StoreListingServiceImpl implements StoreListingService {
             dto.setColor(l.getCar().getColor());
             dto.setEngineVolumeCc(l.getCar().getEngineVolumeCc());
             dto.setEnginePowerHp(l.getCar().getEnginePowerHp());
+        }
+        if (l.getCar() != null && l.getCar().getId() != null) {
+            dto.setExpertReport(expertReportService.getByCarId(l.getCar().getId()));
         }
         return dto;
     }

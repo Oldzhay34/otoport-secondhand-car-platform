@@ -2,16 +2,20 @@ package com.example.otoportdeneme.repositories;
 
 import com.example.otoportdeneme.Enums.ActorType;
 import com.example.otoportdeneme.Enums.AuditAction;
+import com.example.otoportdeneme.dto_Objects.InquiryArchivedMessageDto;
 import com.example.otoportdeneme.models.AuditLog;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.Instant;
 import java.util.List;
 
-public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
+
+public interface AuditLogRepository extends JpaRepository<AuditLog, Long>, JpaSpecificationExecutor<AuditLog> {
 
     List<AuditLog> findByActorTypeAndActorIdOrderByCreatedAtDesc(ActorType actorType, Long actorId);
 
@@ -69,6 +73,11 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
   order by a.createdAt desc
 """)
     List<AuditLog> findRecentBetween(Instant start, Instant end, Pageable pageable);
+
+    // ✅ createdAt'e göre sıralı (limit için pageable)
+    List<AuditLog> findAllByOrderByCreatedAtAsc(Pageable pageable);
+    List<AuditLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
 
 
 }

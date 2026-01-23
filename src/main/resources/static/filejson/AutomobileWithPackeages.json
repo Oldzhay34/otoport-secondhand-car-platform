@@ -607,6 +607,320 @@
           "trims": ["2.2"]
         }
       ]
+    },
+    {
+      "brand": "Bentley",
+      "models": [
+        {
+          "model": "Continental",
+          "variants": [
+            { "variant": "Flying Spur", "note": "tek model" },
+            { "variant": "Flying Spur Speed", "note": "tek model" },
+            { "variant": "GT", "note": "tek model" },
+            { "variant": "GTC", "note": "tek model" },
+            { "variant": "GT Speed", "note": "tek model" },
+            { "variant": "GT Supersports", "note": "tek model" }
+          ]
+        },
+        {
+          "model": "Flying Spur",
+          "engines": [
+            { "engine": "4.0", "note": "tek paket" },
+            { "engine": "6.0", "note": "tek paket" }
+          ]
+        },
+        {
+          "model": "Mulsanne",
+          "engines": [
+            { "engine": "6.75", "note": "tek paket" }
+          ]
+        }
+      ]
+    },
+    {
+      "brand": "BMW",
+      "models": [
+        {
+          "model": "1 Serisi",
+          "engines": [
+            {
+              "engine": "116d",
+              "packages": [
+                "Standart",
+                "Comfort",
+                "First Edition Luxery Line",
+                "First Edition M Sport",
+                "First Edition Sport Line",
+                "Joy",
+                "Joy Plus",
+                "M PLus",
+                "M Sport",
+                "One Edition",
+                "Premium Line",
+                "Pure",
+                "Sport Line",
+                "Sport Plus",
+                "Urban Line"
+              ]
+            },
+            {
+              "engine": "116d ED",
+              "packages": [
+                "EfficientDynamics",
+                "Joy",
+                "Joy Plus",
+                "Sport Line",
+                "Urban Plus"
+              ]
+            },
+            {
+              "engine": "116i",
+              "packages": [
+                "Standart",
+                "Advantage",
+                "Comfort",
+                "Joy Edition",
+                "M Sport",
+                "Premium",
+                "Pure",
+                "Sport",
+                "Sport Edition",
+                "Sport Line",
+                "Technology",
+                "Urban Line"
+              ]
+            },
+            { "engine": "118d", "note": "tek paket" },
+            {
+              "engine": "118i",
+              "packages": [
+                "Standart",
+                "Advantage",
+                "Comfort",
+                "First Edition M Sport",
+                "First Edition Sport Line",
+                "Joy",
+                "Joy Plus",
+                "M Plus",
+                "M Sport",
+                "One Edition",
+                "One Edition M",
+                "Premium",
+                "Premium Line",
+                "Pure",
+                "Sport Line",
+                "Sport Plus",
+                "Urban Line",
+                "Urban Plus"
+              ]
+            },
+            {
+              "engine": "120",
+              "packages": ["M Sport", "Sport Line"]
+            },
+            { "engine": "120d", "note": "tek paket" },
+            {
+              "engine": "120i",
+              "packages": ["M Sport", "Standart", "M Plus"]
+            },
+            { "engine": "128ia", "note": "tek paket" },
+            {
+              "engine": "128ti",
+              "packages": ["Heritage"]
+            },
+            { "engine": "130i", "note": "tek paket" },
+            { "engine": "135i", "note": "tek paket" }
+          ]
+        },
+        {
+          "model": "2 Serisi",
+          "variants": [
+            {
+              "variant": "216 Active Tourer",
+              "packages": [
+                "Active Tourer",
+                "Luxuxry Line",
+                "M Sport",
+                "Premium Line",
+                "Prestige",
+                "Sport Line"
+              ]
+            },
+            {
+              "variant": "216d Gran Coupe",
+              "packages": [
+                "First Edition Luxury Line",
+                "First Edition M Sport",
+                "First Edition Sport Line",
+                "M Sport",
+                "Sport Line"
+              ]
+            },
+            {
+              "variant": "216d Gran Tourer",
+              "packages": [
+                "Gran Tourer",
+                "Joy",
+                "Luxury Line",
+                "Luxury Plus",
+                "Sport Line"
+              ]
+            },
+            {
+              "variant": "218i",
+              "packages": ["Luxury Line", "M Sport", "Prestige", "Sport Line"]
+            },
+            {
+              "variant": "218i Active Tourer",
+              "packages": [
+                "Active Tourer",
+                "Luxury Line",
+                "Luxury Plus",
+                "M Sport",
+                "Sport Line",
+                "Sport Plus"
+              ]
+            },
+            {
+              "variant": "218i Gran Coupe",
+              "packages": [
+                "First Edition Luxury Line",
+                "First Edition M Sport",
+                "First Edition Sport Line",
+                "Luxury Line",
+                "M Sport",
+                "Sport Line"
+              ]
+            },
+            { "variant": "218i Gran Tourer", "packages": ["Gran Tourer"] },
+            { "variant": "220d", "packages": ["Standart", "M Sport"] },
+            { "variant": "220 Gran Coupe", "packages": ["M Sport", "Sportline"] },
+            { "variant": "220i Active Tourer", "packages": ["Luxury Line", "M Sport"] },
+            { "variant": "230e xDrive Active Tourer", "packages": ["Luxury Line", "M Sport"] }
+          ]
+        },
+        {
+          "model": "3 Serisi",
+          "variants": [
+            { "variant": "315", "note": "tek paket" },
+            { "variant": "316", "note": "tek paket" },
+            { "variant": "316Ci", "note": "tek paket" },
+            {
+              "variant": "316i",
+              "packages": [
+                "Standart",
+                "Advantage",
+                "Comfort",
+                "Compact",
+                "Exclusive",
+                "Lifestyle Edition",
+                "Luxury Line",
+                "Modern Line",
+                "M Sport",
+                "Premium",
+                "Sport",
+                "Sport Line",
+                "Technology",
+                "Technology Plus",
+                "Touring"
+              ]
+            },
+            { "variant": "316ti", "packages": ["Compact"] },
+            { "variant": "318Ci", "note": "tek paket" },
+            {
+              "variant": "318d",
+              "packages": [
+                "Standart",
+                "Touring",
+                "Luxury Plus",
+                "M Plus",
+                "Premium",
+                "Prestige",
+                "Pure",
+                "Sport Plus",
+                "40th Year Edition"
+              ]
+            },
+            {
+              "variant": "318i",
+              "packages": [
+                "Standart",
+                "Edition Luxury Line",
+                "Edition M Sport",
+                "Edition M Sport Executive",
+                "Edition Sport Line",
+                "Joy",
+                "Luxury Plus",
+                "M Joy",
+                "M Joy Plus",
+                "M Plus",
+                "M Sport",
+                "Premium Line",
+                "Prestige",
+                "Sport Plus",
+                "Touring",
+                "40th Year Edition"
+              ]
+            },
+            { "variant": "318is", "note": "tek paket" },
+            { "variant": "318tds", "packages": ["Standart"] },
+            { "variant": "318ti", "packages": ["Compact"] },
+            { "variant": "320Ci", "note": "tek paket" },
+            {
+              "variant": "320d",
+              "packages": [
+                "Standart",
+                "Advantage",
+                "Comfort",
+                "Edition Comfort",
+                "Edition M Sport",
+                "Edition Sport Line",
+                "Luxury",
+                "Modern Line",
+                "M Sport",
+                "Premium",
+                "Premium Line",
+                "Prestige",
+                "Sport",
+                "Sport Line",
+                "Style",
+                "Technology",
+                "Techno Plus",
+                "Touring",
+                "40th Year Edition"
+              ]
+            },
+            {
+              "variant": "320d GT",
+              "packages": ["Gran Turismo", "Luxury", "Sport Line"]
+            },
+            {
+              "variant": "320d xDrive",
+              "packages": [
+                "Standart",
+                "Advantage",
+                "Comfort",
+                "Edition Luxury Line",
+                "Edition M Sport",
+                "Luxury Line",
+                "Modern Line",
+                "M Sport",
+                "Premium",
+                "Premium Line",
+                "Prestige",
+                "Sport",
+                "Sport Line",
+                "Sport Plus",
+                "Techno Plus",
+                "Touring M Sport",
+                "40th Year Edition"
+              ]
+            }
+          ]
+        }
+      ]
     }
+
+
   ]
 }

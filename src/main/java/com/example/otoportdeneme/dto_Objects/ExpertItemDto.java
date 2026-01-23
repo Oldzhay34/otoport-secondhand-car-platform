@@ -4,6 +4,7 @@ import com.example.otoportdeneme.Enums.CarPart;
 import com.example.otoportdeneme.Enums.PartStatus;
 
 public class ExpertItemDto {
+
     private CarPart part;
     private PartStatus status;
     private String note;

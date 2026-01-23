@@ -10,11 +10,14 @@ public class AuditRowDto {
     private String entityType;
     private Long entityId;
     private String details;
+    private String ipAddress;
+    private String userAgent;
 
     public AuditRowDto() {}
 
     public AuditRowDto(Instant createdAt, String actorType, Long actorId, String action,
-                       String entityType, Long entityId, String details) {
+                       String entityType, Long entityId, String details,
+                       String ipAddress, String userAgent) {
         this.createdAt = createdAt;
         this.actorType = actorType;
         this.actorId = actorId;
@@ -22,6 +25,8 @@ public class AuditRowDto {
         this.entityType = entityType;
         this.entityId = entityId;
         this.details = details;
+        this.ipAddress = ipAddress;
+        this.userAgent = userAgent;
     }
 
     public Instant getCreatedAt() { return createdAt; }
@@ -44,4 +49,10 @@ public class AuditRowDto {
 
     public String getDetails() { return details; }
     public void setDetails(String details) { this.details = details; }
+
+    public String getIpAddress() { return ipAddress; }
+    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
+
+    public String getUserAgent() { return userAgent; }
+    public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
 }

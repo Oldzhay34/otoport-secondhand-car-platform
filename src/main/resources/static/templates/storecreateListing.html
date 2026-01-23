@@ -4,12 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Mağaza • İlan Oluştur</title>
-
     <link rel="stylesheet" href="/css/storecreateListing.css" />
 </head>
 
 <body data-theme="dark">
-<!-- Topbar -->
 <header class="topbar">
     <div class="brand" onclick="goStoreHome()" role="button" tabindex="0">
         <img class="logo" src="/imagesforapp/logo2.png" alt="logo">
@@ -26,8 +24,8 @@
             <span class="tlabel">Dark</span>
         </label>
 
-        <button class="btn ghost" onclick="goStoreHome()">Home</button>
-        <button class="btn danger" onclick="logout()">Çıkış</button>
+        <button class="btn ghost" type="button" onclick="goStoreHome()">Home</button>
+        <button class="btn danger" type="button" onclick="logout()">Çıkış</button>
     </div>
 </header>
 
@@ -41,13 +39,13 @@
         </div>
 
         <form id="form" class="form">
+
             <!-- Listing -->
             <div class="grid2">
                 <div>
                     <label class="lbl">İlan Başlığı *</label>
                     <input id="title" class="inp" maxlength="150" required placeholder="Örn: 2022 Audi A3 35 TFSI S Line" />
                 </div>
-
                 <div>
                     <label class="lbl">Fiyat *</label>
                     <input id="price" class="inp" type="number" min="1" step="0.01" required placeholder="Örn: 1250000" />
@@ -90,7 +88,7 @@
 
             <hr class="sep" />
 
-            <!-- Car selection from JSON -->
+            <!-- Car selection -->
             <h2 class="h2">Araç Seçimi (Katalog)</h2>
 
             <div class="grid2">
@@ -122,7 +120,7 @@
 
             <hr class="sep" />
 
-            <!-- Car required enums -->
+            <!-- Car enums -->
             <h2 class="h2">Teknik Bilgiler</h2>
 
             <div class="grid2">
@@ -198,18 +196,105 @@
             <h2 class="h2">Fotoğraflar</h2>
 
             <div class="upl">
-                <input id="images" type="file" accept="image/png,image/jpeg,image/webp" multiple />
-                <div class="muted tiny">PNG/JPG/WEBP • Maksimum 10 fotoğraf • İlk fotoğraf kapak olur</div>
-                <div id="preview" class="preview"></div>
+                <!-- ✅ TEK input -->
+                <input id="images" class="file-input" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden />
+
+                <!-- Premium uploader -->
+                <div id="uploader" class="uploader" aria-disabled="false" tabindex="0">
+                    <div class="up-left">
+                        <div class="up-icon">🖼️</div>
+                        <div class="up-text">
+                            <div class="up-title">Dosyaları buraya bırak</div>
+                            <div class="up-sub">PNG/JPG/WEBP • Maksimum 10 fotoğraf • İlk fotoğraf kapak olur</div>
+                        </div>
+                    </div>
+
+                    <div class="up-right">
+                        <div class="up-count" id="fileCount">0 / 10</div>
+                        <button type="button" class="up-btn" id="pickBtn">Dosyaları Seç</button>
+                    </div>
+
+                    <!-- Tooltip -->
+                    <div class="up-tooltip" id="uploadTip" role="tooltip">
+                        Maksimum 10 fotoğraf ekleyebilirsin. Devam etmek için bir fotoğraf sil.
+                    </div>
+                </div>
+
+                <div id="preview" class="preview" aria-label="Fotoğraf önizleme"></div>
             </div>
 
+            <!-- form footer -->
             <div class="footer">
                 <button type="button" class="btn ghost" onclick="goStoreHome()">Vazgeç</button>
                 <button type="submit" class="btn primary">İlanı Oluştur</button>
             </div>
+
+            <!-- kroki -->
+            <section class="car-sketch" id="carSketchPanel">
+                <div class="sketch-head">
+                    <h2 class="h2">Kroki (Ekspertiz)</h2>
+                    <div class="muted tiny" id="sketchHint">Tüm parçalar orijinal</div>
+                </div>
+
+                <div class="sketch-layout">
+                    <div class="sketch-stage">
+                        <img class="sketch-layer" id="sketchBase" alt="Ekspertiz Kroki" />
+                        <div class="sketch-outline" id="sketchOutline"></div>
+                        <div class="sketch-parts" id="sketchParts"></div>
+                    </div>
+
+                    <aside class="sketch-side">
+                        <div class="side-title">Parça seç</div>
+                        <select id="partSelect" class="inp"></select>
+
+                        <div class="side-title" style="margin-top:10px;">Durum seç</div>
+                        <select id="statusSelect" class="inp">
+                            <option value="ORIGINAL">Orijinal</option>
+                            <option value="PAINTED">Boyalı</option>
+                            <option value="LOCAL_PAINT">Lokal Boya</option>
+                            <option value="REPLACED">Değişen</option>
+                        </select>
+
+                        <button id="applyPartStatusBtn" type="button" class="btn primary" style="margin-top:12px;">
+                            Uygula
+                        </button>
+
+                        <div class="muted tiny" id="sideInfo" style="margin-top:10px;">
+                            Parçayı seç, durumu seç, uygula.
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="sketch-legend">
+                    <span class="lg"><i class="dot green"></i> Orijinal</span>
+                    <span class="lg"><i class="dot blue"></i> Boyalı</span>
+                    <span class="lg"><i class="dot orange"></i> Lokal Boya</span>
+                    <span class="lg"><i class="dot red"></i> Değişen</span>
+                </div>
+            </section>
+
+            <!-- sticky anchor -->
+            <div id="ctaSentinel" aria-hidden="true" style="height:1px;"></div>
         </form>
     </section>
 </main>
+
+<!-- ✅ Sticky CTA (tek) -->
+<div class="sticky-cta" id="stickyCta" aria-label="Hızlı işlem çubuğu">
+    <div class="sticky-inner">
+        <div class="sticky-left">
+            <div class="sticky-title">İlanı Yayınla</div>
+            <div class="sticky-sub muted tiny" id="stickyMeta">Kapak: yok • 0/10 fotoğraf</div>
+        </div>
+
+        <div class="sticky-right">
+            <button type="button" class="btn ghost" id="ctaCancel">Vazgeç</button>
+            <button type="button" class="btn primary" id="ctaSubmit">
+                <span class="ctaText">İlanı Oluştur</span>
+            </button>
+        </div>
+    </div>
+</div>
 
 <script src="/js/storecreateListing.js"></script>
 </body>

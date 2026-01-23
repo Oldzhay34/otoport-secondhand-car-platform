@@ -21,6 +21,8 @@ public class StoreListingEditDto {
     private Integer engineVolumeCc;
     private Integer enginePowerHp;
 
+    private ExpertReportDto expertReport;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -62,4 +64,7 @@ public class StoreListingEditDto {
 
     public Integer getEnginePowerHp() { return enginePowerHp; }
     public void setEnginePowerHp(Integer enginePowerHp) { this.enginePowerHp = enginePowerHp; }
+
+    public ExpertReportDto getExpertReport() { return expertReport; }
+    public void setExpertReport(ExpertReportDto expertReport) { this.expertReport = expertReport; }
 }
