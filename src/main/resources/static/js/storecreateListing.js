@@ -8,7 +8,13 @@ const TOKEN_KEY = "token";
 const THEME_KEY = "theme";
 
 const CREATE_URL = `${API_BASE}/api/store/listings`;
-const CATALOG_URL = "/filejson/AutomobileWithPackeages.json";
+
+// ✅ Katalog URL'leri (bodyType’a göre)
+const CATALOG_URLS = {
+    CAR: "/filejson/AutomobileWithPackeages.json",
+    SUV: "/filejson/suvwithpackages.json",
+    MINIVAN: "/filejson/minivanwithpackages.json"
+};
 
 /* =========================================================
    HELPERS
@@ -63,6 +69,34 @@ async function apiFetch(pathOrUrl, { method="GET", headers={}, body=null, auth=t
     }
 
     return data;
+}
+
+/* =========================================================
+   ✅ BODY TYPE -> CATALOG PICKER
+========================================================= */
+function normalizeBodyTypeForCatalog(v){
+    const s = String(v || "").toUpperCase().trim();
+
+    // SUV
+    if (s.includes("SUV") || s.includes("CROSSOVER")) return "SUV";
+
+    // Minivan / Panelvan / Van
+    if (
+        s.includes("MINIVAN") ||
+        s.includes("PANELVAN") ||
+        s.includes("PANEL VAN") ||
+        s === "VAN"
+    ) return "MINIVAN";
+
+    // Default: binek
+    return "CAR";
+}
+
+function getCatalogUrlByBodyType(){
+    // store create sayfanda bodyType id'si "bodyType"
+    const bodyTypeVal = $("bodyType")?.value || "";
+    const key = normalizeBodyTypeForCatalog(bodyTypeVal);
+    return CATALOG_URLS[key] || CATALOG_URLS.CAR;
 }
 
 /* =========================================================
@@ -150,8 +184,9 @@ let selectedModelObj = null;
 let selectedVariantObj = null;
 
 async function loadCatalog(){
-    const res = await fetch(CATALOG_URL, { cache:"no-store" });
-    if (!res.ok) throw new Error("Araç kataloğu okunamadı (AutomobileWithPackeages.json).");
+    const url = getCatalogUrlByBodyType();
+    const res = await fetch(url, { cache:"no-store" });
+    if (!res.ok) throw new Error(`Araç kataloğu okunamadı (${url}).`);
     catalog = await res.json();
 }
 
@@ -879,6 +914,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         modelSel.addEventListener("change", refreshVariantEnginePackageForModel);
         variantSel.addEventListener("change", refreshEnginePackageForVariant);
         engineSel.addEventListener("change", refreshPackageForEngine);
+
+        // ✅ bodyType değişince katalog değişsin
+        $("bodyType")?.addEventListener("change", async () => {
+            try{
+                await loadCatalog();
+                refreshBrand();
+
+                // seçimleri sıfırla
+                brandSel.value = "";
+                modelSel.value = "";
+                variantSel.value = "";
+                engineSel.value = "";
+                pkgSel.value = "";
+
+                showAlert("ok", "Araç kataloğu gövde tipine göre güncellendi.");
+            } catch(e){
+                showAlert("err", e.message || "Katalog değiştirilemedi.");
+            }
+        });
 
         if (!formEl) throw new Error("Form bulunamadı (id='form').");
         formEl.addEventListener("submit", submitForm);

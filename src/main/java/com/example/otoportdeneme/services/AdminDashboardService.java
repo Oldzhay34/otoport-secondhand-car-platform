@@ -13,4 +13,6 @@ public interface AdminDashboardService {
 
     // istersen son hareketler (audit feed)
     List<AuditRowDto> getRecentAudit(LocalDate date, int limit);
+
+    List<SpamAttemptActorDto> getSpamAttemptActors(LocalDate d);
 }

@@ -3,7 +3,14 @@
 // home.js
 
 const THEME_KEY = "theme"; // "light" | "dark"
-const CAR_JSON_URL = "/filejson/AutomobileWithPackeages.json";
+
+// ✅ Dinamik katalog seçimi
+const CAR_JSON_URLS = {
+    CAR: "/filejson/AutomobileWithPackeages.json",
+    SUV: "/filejson/suvwithpackages.json",
+    MINIVAN: "/filejson/minivanwithpackages.json",
+};
+
 const STORES_API_URL = "/api/home/stores?limit=50";
 
 let carData = null;
@@ -51,7 +58,7 @@ function escapeHtml(s) {
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
-        "'": "&#039;"
+        "'": "&#039;",
     }[m]));
 }
 
@@ -88,6 +95,36 @@ function logout() {
 }
 window.logout = logout;
 
+// ✅ BodyType -> Catalog key
+function normalizeBodyTypeForCatalog(v) {
+    const s = String(v || "").toUpperCase().trim();
+    if (!s) return "CAR";
+
+    // SUV
+    if (s.includes("SUV") || s.includes("CROSSOVER")) return "SUV";
+
+    // MINIVAN / PANELVAN / VAN
+    if (s.includes("MINIVAN") || s.includes("PANELVAN") || s.includes("PANEL VAN") || s === "VAN") return "MINIVAN";
+
+    return "CAR";
+}
+
+function getHomeCatalogUrl() {
+    const body = document.getElementById("bodyTypeSelect")?.value || "";
+    const key = normalizeBodyTypeForCatalog(body);
+    return CAR_JSON_URLS[key] || CAR_JSON_URLS.CAR;
+}
+
+function clearCarSelectionsUi() {
+    selectedBrandObj = null;
+    selectedModelObj = null;
+    selectedVariantObj = null;
+    selectedEngineObj = null;
+
+    if (brandSelect) brandSelect.value = "";
+    resetDownstream("brand");
+}
+
 // ----------------------
 // STORES (API)
 // ----------------------
@@ -99,28 +136,27 @@ async function fetchJson(url, options = {}) {
         : await res.text().catch(() => null);
 
     if (!res.ok) {
-        const msg = (body && (body.message || body.error)) || (typeof body === "string" ? body : "") || `HTTP ${res.status}`;
+        const msg =
+            (body && (body.message || body.error)) ||
+            (typeof body === "string" ? body : "") ||
+            `HTTP ${res.status}`;
         throw new Error(msg);
     }
     return body;
 }
 
 function normalizeStoreDto(s) {
-    // backend StoreCardDto alanlarına göre
     const id = s?.id ?? null;
     const name = s?.storeName ?? s?.name ?? "Mağaza";
     const city = s?.city ?? "";
     const district = s?.district ?? "";
 
-    // image/logo
     const image =
         s?.logoUrl ||
         s?.logoURL ||
         s?.image ||
         "/imagesforapp/logo2.png";
 
-    // --- Badge / Trust fields (opsiyonel) ---
-    // Backend’in hangi alanları gönderdiğini bilmediğimiz için olabildiğince tolerant okuyoruz.
     const listingCount =
         s?.listingCount ??
         s?.adsCount ??
@@ -157,11 +193,11 @@ function renderStores(list) {
 
         const loc = [s.city, s.district].filter(Boolean).join(" • ");
         const cityOnly = s.city || "—";
-        const countText = (typeof s.listingCount === "number" || typeof s.listingCount === "string")
-            ? `${escapeHtml(s.listingCount)} ilan`
-            : null;
+        const countText =
+            (typeof s.listingCount === "number" || typeof s.listingCount === "string")
+                ? `${escapeHtml(s.listingCount)} ilan`
+                : null;
 
-        // Badge HTML
         const badgesHtml = `
       <div class="store-badges">
         ${s.verified ? `<span class="badge verified">✔ Doğrulanmış</span>` : ``}
@@ -170,7 +206,6 @@ function renderStores(list) {
       </div>
     `;
 
-        // Trust HTML (rating opsiyonel)
         const trustHtml = `
       <div class="store-trust">
         <span class="trust-pill">🛡️ Güvenilir</span>
@@ -181,7 +216,6 @@ function renderStores(list) {
         div.innerHTML = `
       ${badgesHtml}
       ${trustHtml}
-
       <img src="${escapeHtml(safeImageUrl(s.image))}" alt="">
       <div class="store-info">
         <h4>${escapeHtml(s.name)}</h4>
@@ -211,14 +245,15 @@ async function loadStores() {
 }
 
 // ----------------------
-// CAR FILTERS: LOAD JSON
+// CAR FILTERS: LOAD JSON (DYNAMIC)
 // ----------------------
 async function initCarFilters() {
     try {
         if (brandSelect) brandSelect.innerHTML = `<option value="">Yükleniyor...</option>`;
 
-        const res = await fetch(CAR_JSON_URL, { cache: "no-store" });
-        if (!res.ok) throw new Error("JSON yüklenemedi: HTTP " + res.status);
+        const url = getHomeCatalogUrl();
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error("JSON yüklenemedi: HTTP " + res.status + ` (${url})`);
 
         carData = await res.json();
         populateBrands(carData);
@@ -231,6 +266,9 @@ async function initCarFilters() {
 }
 
 function attachEvents() {
+    // aynı eventleri üst üste bindirmemek için:
+    // basit çözüm: mevcut eventleri tekrar eklemek çok kritik değil,
+    // ama istersen burada "once" flag kullanabilirsin.
     brandSelect?.addEventListener("change", onBrandChange);
     modelSelect?.addEventListener("change", onModelChange);
     variantSelect?.addEventListener("change", onVariantChange);
@@ -238,6 +276,12 @@ function attachEvents() {
 
     document.getElementById("applyBtn")?.addEventListener("click", applyCarFilters);
     document.getElementById("resetBtn")?.addEventListener("click", resetFilters);
+
+    // ✅ bodyType değişirse katalog değişsin
+    document.getElementById("bodyTypeSelect")?.addEventListener("change", async () => {
+        clearCarSelectionsUi();
+        await initCarFilters(); // yeniden katalog çek + dropdownları doldur
+    });
 }
 
 function populateBrands(data) {
@@ -408,6 +452,9 @@ function applyCarFilters() {
     const yearMin = document.getElementById("yearMin")?.value || "";
     const yearMax = document.getElementById("yearMax")?.value || "";
 
+    // ✅ bodyType'i query'e koy (filter sayfası katalog seçsin)
+    const bodyType = document.getElementById("bodyTypeSelect")?.value || "";
+
     const qs = new URLSearchParams();
     if (brand) qs.set("brand", brand);
     if (model) qs.set("model", model);
@@ -415,6 +462,7 @@ function applyCarFilters() {
     if (pack) qs.set("pack", pack);
     if (yearMin) qs.set("yearMin", yearMin);
     if (yearMax) qs.set("yearMax", yearMax);
+    if (bodyType) qs.set("bodyType", bodyType);
 
     window.location.href = `/templates/filter.html?${qs.toString()}`;
 }

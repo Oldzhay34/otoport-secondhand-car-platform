@@ -1,6 +1,8 @@
 package com.example.otoportdeneme.repositories;
 
 import com.example.otoportdeneme.models.MessageModerationAttempt;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -17,4 +19,8 @@ public interface MessageModerationAttemptRepository extends JpaRepository<Messag
       order by count(a) desc
     """)
     List<Object[]> topActorsSince(Instant since);
+
+    Page<MessageModerationAttempt> findByCreatedAtBetweenOrderByCreatedAtDesc(
+            Instant start, Instant end, Pageable pageable
+    );
 }

@@ -4,7 +4,13 @@
 
 const API_BASE = "http://localhost:8080";
 const THEME_KEY = "theme";
-const CAR_JSON_URL = "/filejson/AutomobileWithPackeages.json";
+
+// ✅ Dinamik katalog seçimi
+const CAR_JSON_URLS = {
+    CAR: "/filejson/AutomobileWithPackeages.json",
+    SUV: "/filejson/suvwithpackages.json",
+    MINIVAN: "/filejson/minivanwithpackages.json",
+};
 
 const STORES_URL = `${API_BASE}/api/home/stores?limit=200`;
 const LISTINGS_URL = `${API_BASE}/api/listings`;
@@ -76,10 +82,10 @@ function pickStoreCity(store) {
     return store?.city || store?.location || "";
 }
 
-function toPublicImg(u){
-    if(!u) return u;
+function toPublicImg(u) {
+    if (!u) return u;
     if (u.startsWith("http") || u.startsWith("/")) return u;
-    return "/uploads/" + u; // sadece dosya adıysa
+    return "/uploads/" + u;
 }
 
 function pickCover(listing) {
@@ -93,9 +99,34 @@ function pickCover(listing) {
 }
 
 // --------------------
+// ✅ BodyType -> Catalog key
+// --------------------
+function normalizeBodyTypeForCatalog(v) {
+    const s = String(v || "").toUpperCase().trim();
+    if (!s) return "CAR";
+
+    if (s.includes("SUV") || s.includes("CROSSOVER")) return "SUV";
+    if (s.includes("MINIVAN") || s.includes("PANELVAN") || s.includes("PANEL VAN") || s === "VAN") return "MINIVAN";
+
+    return "CAR";
+}
+
+function getFilterCatalogUrl() {
+    // 1) URL param varsa onu kullan
+    const params = new URLSearchParams(window.location.search);
+    const bodyFromUrl = params.get("bodyType") || "";
+
+    // 2) yoksa selectten oku
+    const bodyFromSelect = $("bodyTypeSelect")?.value || "";
+
+    const key = normalizeBodyTypeForCatalog(bodyFromUrl || bodyFromSelect);
+    return CAR_JSON_URLS[key] || CAR_JSON_URLS.CAR;
+}
+
+// --------------------
 // STATE
 // --------------------
-let storesIndex = new Map(); // storeId -> storeDto
+let storesIndex = new Map();
 let carData = null;
 
 let selectedBrandObj = null;
@@ -140,7 +171,7 @@ async function loadStores() {
 }
 
 // --------------------
-// CAR JSON -> dropdowns
+// CAR JSON -> dropdowns (DYNAMIC)
 // --------------------
 async function initCarDropdowns() {
     const brandSelect = $("brandSelect");
@@ -152,8 +183,9 @@ async function initCarDropdowns() {
     if (!brandSelect || !modelSelect) return;
 
     try {
-        const res = await fetch(CAR_JSON_URL, { cache: "no-store" });
-        if (!res.ok) throw new Error("JSON yüklenemedi: HTTP " + res.status);
+        const url = getFilterCatalogUrl();
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error("JSON yüklenemedi: HTTP " + res.status + ` (${url})`);
 
         carData = await res.json();
 
@@ -343,7 +375,6 @@ function normalizeBodyType(v) {
     let s = String(v ?? "").trim().toUpperCase();
     if (!s) return "";
 
-    // sadece harf/rakam bırak
     const k = s.replace(/[^A-Z0-9]/g, "");
 
     if (k === "HB" || k.includes("HATCHBACK") || k.includes("HATCH") || k.includes("HBACK")) return "HATCHBACK";
@@ -353,7 +384,6 @@ function normalizeBodyType(v) {
     if (k.includes("COUPE")) return "COUPE";
     if (k.includes("STATIONWAGON") || k.includes("WAGON") || k === "SW") return "STATION_WAGON";
 
-    // enum zaten düzgünse: SEDAN / HATCHBACK / ...
     return s;
 }
 
@@ -364,7 +394,6 @@ function engineMatches(listingEngine, selectedEngine) {
     if (!e) return false;
     if (e === s) return true;
 
-    // "35 TFSI" seçince 30 TFSI gelmesin:
     const parts = s.split(" ").filter(Boolean);
     const num = parts.find(p => /^\d+$/.test(p));
     const rest = parts.filter(p => p !== num);
@@ -390,11 +419,6 @@ function getBodyTypeValue(l) {
 function clientSideFilter(listings, filters) {
     let out = Array.isArray(listings) ? listings.slice() : [];
 
-    // DEBUG (istersen sonra sil)
-    console.log("SELECTED bodyType(raw) =", filters.bodyType);
-    console.log("SELECTED bodyType(norm)=", normalizeBodyType(filters.bodyType));
-    console.log("SAMPLE bodyTypes(norm) =", out.slice(0, 10).map(getBodyTypeValue));
-
     const q = (filters.q || "").toLowerCase();
     if (q) {
         out = out.filter(l => {
@@ -407,33 +431,27 @@ function clientSideFilter(listings, filters) {
         });
     }
 
-    // Brand exact
     if (filters.brand) {
         const b = filters.brand.trim().toLowerCase();
         out = out.filter(l => String(l.brand || "").trim().toLowerCase() === b);
     }
 
-    // Model exact
     if (filters.model) {
         const m = filters.model.trim().toLowerCase();
         out = out.filter(l => String(l.model || "").trim().toLowerCase() === m);
     }
 
-    // Year range
     if (filters.yearMin != null) out = out.filter(l => l.year != null && Number(l.year) >= filters.yearMin);
     if (filters.yearMax != null) out = out.filter(l => l.year != null && Number(l.year) <= filters.yearMax);
 
-    // Price range
     if (filters.priceMin != null) out = out.filter(l => Number(l.price || 0) >= filters.priceMin);
     if (filters.priceMax != null) out = out.filter(l => Number(l.price || 0) <= filters.priceMax);
 
-    // ✅ BodyType exact (asıl fix burada)
     if (filters.bodyType) {
         const bt = normalizeBodyType(filters.bodyType);
         out = out.filter(l => getBodyTypeValue(l) === bt);
     }
 
-    // Engine
     if (filters.engine) {
         out = out.filter(l => engineMatches(l.engine, filters.engine));
     }
@@ -455,14 +473,13 @@ function groupByStore(listings) {
     });
     return map;
 }
-function goFavorites(){
+
+function goFavorites() {
     const t = localStorage.getItem("token");
     const hasToken = t && t.trim().length > 0;
     window.location.href = hasToken ? "/templates/favorites.html" : "/templates/favoriteviewexc.html";
 }
 window.goFavorites = goFavorites;
-
-
 
 function render(groupsMap) {
     const root = $("storeGroups");
@@ -531,7 +548,6 @@ function render(groupsMap) {
             window.location.href = `/templates/vehicleinfo.html?id=${encodeURIComponent(id)}`;
         });
     });
-
 }
 
 function renderEmpty(msg = "Sonuç bulunamadı") {
@@ -564,8 +580,7 @@ function readFilters() {
     const engine = (!$("engineSelect")?.disabled ? ($("engineSelect")?.value || "").trim() : "");
     const pack = (!$("packageSelect")?.disabled ? ($("packageSelect")?.value || "").trim() : "");
 
-    // ✅ Bunu kesin id ile oku (senin sayfada var)
-    const bodyRaw = ($("bodyTypeSelect")?.value || "").trim(); // "" | "SEDAN" | "HATCHBACK" ...
+    const bodyRaw = ($("bodyTypeSelect")?.value || "").trim();
     const bodyType = normalizeBodyType(bodyRaw);
 
     const yearMin = ($("yearMin")?.value || "").trim();
@@ -578,7 +593,6 @@ function readFilters() {
 
     return {
         api: {
-            // backend filtrelemiyorsa boş bırakıyoruz
             brand: null,
             model: null,
             yearMin: null,
@@ -588,7 +602,7 @@ function readFilters() {
             q,
             brand,
             model,
-            bodyType,     // <- "HATCHBACK" gibi
+            bodyType,
             engine,
             pack,
             yearMin: yearMin ? Number(yearMin) : null,
@@ -658,9 +672,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.warn("Store listesi çekilemedi:", e.message);
     }
 
+    // ✅ Önce bodyType set edildi (URL’den geldiyse), sonra doğru katalog çekilecek
     await initCarDropdowns();
 
-    // URL’den gelen brand/model’i set et
     if (wanted.brand && $("brandSelect")) {
         $("brandSelect").value = wanted.brand;
         $("brandSelect").dispatchEvent(new Event("change"));
@@ -672,7 +686,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }, 0);
     }
 
-    // URL’den engine/pack geldiyse
     setTimeout(() => {
         if (wanted.engine && $("engineSelect") && !$("engineSelect").disabled) {
             $("engineSelect").value = wanted.engine;
@@ -688,8 +701,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("searchBtn")?.addEventListener("click", refresh);
     $("q")?.addEventListener("keydown", (e) => { if (e.key === "Enter") refresh(); });
 
-    // ✅ bodyType değişince otomatik uygula (istersen kaldır)
-    $("bodyTypeSelect")?.addEventListener("change", refresh);
+    // ✅ bodyType değişince: katalog değişsin + filtre uygula
+    $("bodyTypeSelect")?.addEventListener("change", async () => {
+        // dropdown seçimlerini temizle
+        if ($("brandSelect")) $("brandSelect").value = "";
+        if ($("modelSelect")) { $("modelSelect").value = ""; $("modelSelect").disabled = true; $("modelSelect").innerHTML = `<option value="">Önce marka seç</option>`; }
+        if ($("variantSelect")) { $("variantSelect").value = ""; $("variantSelect").disabled = true; }
+        if ($("engineSelect")) { $("engineSelect").value = ""; $("engineSelect").disabled = true; }
+        if ($("packageSelect")) { $("packageSelect").value = ""; $("packageSelect").disabled = true; }
+
+        selectedBrandObj = null;
+        selectedModelObj = null;
+        selectedVariantObj = null;
+        selectedEngineObj = null;
+
+        await initCarDropdowns();
+        refresh();
+    });
 
     refresh();
 });

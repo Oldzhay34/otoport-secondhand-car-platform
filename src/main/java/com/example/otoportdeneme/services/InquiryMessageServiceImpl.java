@@ -8,8 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-
 @Service
 public class InquiryMessageServiceImpl implements InquiryMessageService {
 
@@ -20,7 +18,9 @@ public class InquiryMessageServiceImpl implements InquiryMessageService {
     private final AuditService auditService;
     private final NotificationService notificationService;
     private final MessageModerationService moderationService;
-    private final MessageModerationAttemptRepository attemptRepo;
+
+    // ✅ NEW
+    private final MessageModerationAttemptService attemptService;
 
     public InquiryMessageServiceImpl(
             InquiryRepository inquiryRepository,
@@ -30,7 +30,7 @@ public class InquiryMessageServiceImpl implements InquiryMessageService {
             AuditService auditService,
             NotificationService notificationService,
             MessageModerationService moderationService,
-            MessageModerationAttemptRepository attemptRepo
+            MessageModerationAttemptService attemptService
     ) {
         this.inquiryRepository = inquiryRepository;
         this.messageRepository = messageRepository;
@@ -39,7 +39,7 @@ public class InquiryMessageServiceImpl implements InquiryMessageService {
         this.auditService = auditService;
         this.notificationService = notificationService;
         this.moderationService = moderationService;
-        this.attemptRepo = attemptRepo;
+        this.attemptService = attemptService;
     }
 
     @Override
@@ -165,21 +165,21 @@ public class InquiryMessageServiceImpl implements InquiryMessageService {
 
         if (res.isAllowed()) return;
 
-        // inquiry spam işaretle
+        // inquiry spam işaretle (bu değişiklik ana TX ile rollback olabilir; istersen bunu da REQUIRES_NEW yaparız)
         inquiry.setStatus(InquiryStatus.SPAM);
         inquiryRepository.save(inquiry);
 
-        // attempt kaydı
-        MessageModerationAttempt a = new MessageModerationAttempt();
-        a.setActorType(actorType);
-        a.setActorId(actorId);
-        a.setInquiryId(inquiry.getId());
-        a.setReason(res.getReason());
-        a.setHitCount(res.getHitCount());
-        a.setMatchedPreview(String.join(",", res.getMatches() == null ? List.of() : res.getMatches()));
-        a.setIpAddress(ip);
-        a.setUserAgent(ua);
-        attemptRepo.save(a);
+        // ✅ attempt kaydı: rollback yemesin
+        attemptService.record(
+                actorType,
+                actorId,
+                inquiry.getId(),
+                res.getReason(),
+                res.getHitCount(),
+                res.getMatches(),
+                ip,
+                ua
+        );
 
         // audit (store veya client)
         Object actor = (actorType == ActorType.STORE) ? inquiry.getStore() : inquiry.getClient();

@@ -22,8 +22,8 @@ public class InquiryClientServiceImpl implements InquiryClientService {
     private final AuditService auditService;
     private final NotificationService notificationService;
 
-    private final MessageModerationService moderationService;                 // ✅
-    private final MessageModerationAttemptRepository attemptRepo;             // ✅
+    private final MessageModerationService moderationService;
+    private final MessageModerationAttemptService attemptService; // ✅
 
     public InquiryClientServiceImpl(
             InquiryRepository inquiryRepository,
@@ -33,7 +33,7 @@ public class InquiryClientServiceImpl implements InquiryClientService {
             AuditService auditService,
             NotificationService notificationService,
             MessageModerationService moderationService,
-            MessageModerationAttemptRepository attemptRepo
+            MessageModerationAttemptService attemptService
     ) {
         this.inquiryRepository = inquiryRepository;
         this.messageRepository = messageRepository;
@@ -42,7 +42,7 @@ public class InquiryClientServiceImpl implements InquiryClientService {
         this.auditService = auditService;
         this.notificationService = notificationService;
         this.moderationService = moderationService;
-        this.attemptRepo = attemptRepo;
+        this.attemptService = attemptService;
     }
 
     @Override
@@ -78,22 +78,22 @@ public class InquiryClientServiceImpl implements InquiryClientService {
                     return inquiryRepository.save(i);
                 });
 
-        // ✅ MODERATION: mesaj kaydetmeden önce kontrol
         var res = moderationService.check(message.trim());
         if (!res.isAllowed()) {
             inquiry.setStatus(InquiryStatus.SPAM);
             inquiryRepository.save(inquiry);
 
-            MessageModerationAttempt a = new MessageModerationAttempt();
-            a.setActorType(ActorType.CLIENT);
-            a.setActorId(clientId);
-            a.setInquiryId(inquiry.getId());
-            a.setReason(res.getReason());
-            a.setHitCount(res.getHitCount());
-            a.setMatchedPreview(String.join(",", res.getMatches() == null ? List.of() : res.getMatches()));
-            a.setIpAddress(ip);
-            a.setUserAgent(ua);
-            attemptRepo.save(a);
+            // ✅ attempt rollback yemesin
+            attemptService.record(
+                    ActorType.CLIENT,
+                    clientId,
+                    inquiry.getId(),
+                    res.getReason(),
+                    res.getHitCount(),
+                    res.getMatches(),
+                    ip,
+                    ua
+            );
 
             auditService.log(
                     client,
@@ -117,8 +117,6 @@ public class InquiryClientServiceImpl implements InquiryClientService {
         msg.setReadByClient(true);
         msg.setReadByStore(false);
         messageRepository.save(msg);
-
-        // (senin istediğin gibi: notification yok)
 
         auditService.log(
                 client,

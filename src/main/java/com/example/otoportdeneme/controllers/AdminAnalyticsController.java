@@ -1,6 +1,5 @@
 package com.example.otoportdeneme.controllers;
 
-import com.example.otoportdeneme.dto_Objects.admin.SpamAttemptActorDto;
 import com.example.otoportdeneme.dto_Response.AdminDailyStatsDto;
 import com.example.otoportdeneme.dto_Response.HourlyPointDto;
 import com.example.otoportdeneme.dto_Response.StoreActivityDto;
@@ -16,6 +15,7 @@ import java.util.List;
 public class AdminAnalyticsController {
 
     private final AdminAnalyticsService svc;
+    private static final ZoneId TR = ZoneId.of("Europe/Istanbul");
 
     public AdminAnalyticsController(AdminAnalyticsService svc) {
         this.svc = svc;
@@ -23,28 +23,20 @@ public class AdminAnalyticsController {
 
     @GetMapping("/daily")
     public AdminDailyStatsDto daily(@RequestParam(required = false) String date) {
-        ZoneId tr = ZoneId.of("Europe/Istanbul");
-        LocalDate d = (date == null || date.isBlank()) ? LocalDate.now(tr) : LocalDate.parse(date);
+        LocalDate d = (date == null || date.isBlank()) ? LocalDate.now(TR) : LocalDate.parse(date);
         return svc.daily(d);
     }
 
     @GetMapping("/hourly")
     public List<HourlyPointDto> hourly(@RequestParam(required = false) String date) {
-        ZoneId tr = ZoneId.of("Europe/Istanbul");
-        LocalDate d = (date == null || date.isBlank()) ? LocalDate.now(tr) : LocalDate.parse(date);
+        LocalDate d = (date == null || date.isBlank()) ? LocalDate.now(TR) : LocalDate.parse(date);
         return svc.hourly(d);
     }
 
     @GetMapping("/store-activity")
     public List<StoreActivityDto> storeActivity(@RequestParam(required = false) String date) {
-        ZoneId tr = ZoneId.of("Europe/Istanbul");
-        LocalDate d = (date == null || date.isBlank()) ? LocalDate.now(tr) : LocalDate.parse(date);
+        LocalDate d = (date == null || date.isBlank()) ? LocalDate.now(TR) : LocalDate.parse(date);
         return svc.storeActivity(d);
-    }
-    @GetMapping("/api/admin/dashboard/spam-attempts")
-    public List<SpamAttemptActorDto> spamAttempts(@RequestParam String date) {
-        LocalDate d = LocalDate.parse(date);
-        return svc.spamAttemptActors(d);
     }
 
 

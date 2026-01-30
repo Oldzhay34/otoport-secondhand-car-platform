@@ -21,14 +21,18 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final AuditLogRepository auditLogRepository;
     private final StoreRepository storeRepository;
 
+    private final AdminAnalyticsService analyticsService;
+
     public AdminDashboardServiceImpl(
             VisitLogRepository visitLogRepository,
             AuditLogRepository auditLogRepository,
-            StoreRepository storeRepository
+            StoreRepository storeRepository,
+            AdminAnalyticsService analyticsService
     ) {
         this.visitLogRepository = visitLogRepository;
         this.auditLogRepository = auditLogRepository;
         this.storeRepository = storeRepository;
+        this.analyticsService = analyticsService;
     }
 
     private ZoneId zone() {
@@ -118,7 +122,6 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         List<AuditLog> logs = auditLogRepository
                 .findByCreatedAtBetweenOrderByCreatedAtDesc(start, end, PageRequest.of(0, limit));
 
-        // ✅ AuditRowDto yeni constructor: ipAddress + userAgent eklendi
         return logs.stream()
                 .map(a -> new AuditRowDto(
                         a.getCreatedAt(),
@@ -142,5 +145,11 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
             m.put(id, c);
         }
         return m;
+    }
+
+    // ✅ AdminDashboardController: /api/admin/dashboard/spam-attempts burayı çağıracak
+    @Override
+    public List<SpamAttemptActorDto> getSpamAttemptActors(LocalDate date) {
+        return analyticsService.spamAttemptActors(date);
     }
 }

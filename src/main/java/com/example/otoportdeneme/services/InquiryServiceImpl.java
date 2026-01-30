@@ -8,8 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-
 @Service
 public class InquiryServiceImpl implements InquiryService {
 
@@ -20,8 +18,8 @@ public class InquiryServiceImpl implements InquiryService {
     private final AuditService auditService;
     private final NotificationService notificationService;
 
-    private final MessageModerationService moderationService;                 // ✅
-    private final MessageModerationAttemptRepository attemptRepo;             // ✅
+    private final MessageModerationService moderationService;
+    private final MessageModerationAttemptService attemptService; // ✅
 
     public InquiryServiceImpl(
             InquiryRepository inquiryRepository,
@@ -31,7 +29,7 @@ public class InquiryServiceImpl implements InquiryService {
             AuditService auditService,
             NotificationService notificationService,
             MessageModerationService moderationService,
-            MessageModerationAttemptRepository attemptRepo
+            MessageModerationAttemptService attemptService
     ) {
         this.inquiryRepository = inquiryRepository;
         this.messageRepository = messageRepository;
@@ -40,11 +38,10 @@ public class InquiryServiceImpl implements InquiryService {
         this.auditService = auditService;
         this.notificationService = notificationService;
         this.moderationService = moderationService;
-        this.attemptRepo = attemptRepo;
+        this.attemptService = attemptService;
     }
 
     // ================= GUEST =================
-
     @Override
     @Transactional
     public Long createInquiryGuest(Long listingId, String guestName, String guestEmail, String guestPhone,
@@ -56,7 +53,6 @@ public class InquiryServiceImpl implements InquiryService {
         Listing listing = listingRepository.findById(listingId)
                 .orElseThrow(() -> new IllegalArgumentException("Listing not found"));
 
-        // inquiry oluştur
         Inquiry inquiry = new Inquiry();
         inquiry.setListing(listing);
         inquiry.setStore(listing.getStore());
@@ -66,22 +62,22 @@ public class InquiryServiceImpl implements InquiryService {
         inquiry.setStatus(InquiryStatus.OPEN);
         inquiryRepository.save(inquiry);
 
-        // ✅ MODERATION: ilk mesaj kontrol
         var res = moderationService.check(firstMessage.trim());
         if (!res.isAllowed()) {
             inquiry.setStatus(InquiryStatus.SPAM);
             inquiryRepository.save(inquiry);
 
-            MessageModerationAttempt a = new MessageModerationAttempt();
-            a.setActorType(ActorType.GUEST);
-            a.setActorId(null);
-            a.setInquiryId(inquiry.getId());
-            a.setReason(res.getReason());
-            a.setHitCount(res.getHitCount());
-            a.setMatchedPreview(String.join(",", res.getMatches() == null ? List.of() : res.getMatches()));
-            a.setIpAddress(ip);
-            a.setUserAgent(userAgent);
-            attemptRepo.save(a);
+            // ✅ attempt rollback yemesin
+            attemptService.record(
+                    ActorType.GUEST,
+                    null,
+                    inquiry.getId(),
+                    res.getReason(),
+                    res.getHitCount(),
+                    res.getMatches(),
+                    ip,
+                    userAgent
+            );
 
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Mesaj gönderilemedi (uygunsuz içerik tespit edildi)");
@@ -107,7 +103,6 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     // ================= CLIENT =================
-
     @Override
     @Transactional
     public Long createInquiryClient(Long listingId, Long clientId, String firstMessage, String ip, String userAgent) {
@@ -128,22 +123,22 @@ public class InquiryServiceImpl implements InquiryService {
         inquiry.setStatus(InquiryStatus.OPEN);
         inquiryRepository.save(inquiry);
 
-        // ✅ MODERATION: ilk mesaj kontrol
         var res = moderationService.check(firstMessage.trim());
         if (!res.isAllowed()) {
             inquiry.setStatus(InquiryStatus.SPAM);
             inquiryRepository.save(inquiry);
 
-            MessageModerationAttempt a = new MessageModerationAttempt();
-            a.setActorType(ActorType.CLIENT);
-            a.setActorId(clientId);
-            a.setInquiryId(inquiry.getId());
-            a.setReason(res.getReason());
-            a.setHitCount(res.getHitCount());
-            a.setMatchedPreview(String.join(",", res.getMatches() == null ? List.of() : res.getMatches()));
-            a.setIpAddress(ip);
-            a.setUserAgent(userAgent);
-            attemptRepo.save(a);
+            // ✅ attempt rollback yemesin
+            attemptService.record(
+                    ActorType.CLIENT,
+                    clientId,
+                    inquiry.getId(),
+                    res.getReason(),
+                    res.getHitCount(),
+                    res.getMatches(),
+                    ip,
+                    userAgent
+            );
 
             auditService.log(
                     client,
