@@ -331,6 +331,13 @@ body[data-theme="dark"] .value{
     border-color: var(--accent-line);
     background: var(--accent-soft);
 }
+#statSpamAttempts{
+    color: #EF4444; /* red */
+}
+body[data-theme="dark"] #statSpamAttempts{
+    color: #FCA5A5;
+}
+
 
 @media (max-width: 980px){
     .grid{ grid-template-columns: 1fr; }

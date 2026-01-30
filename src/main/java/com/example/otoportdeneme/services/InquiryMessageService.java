@@ -21,4 +21,5 @@ public interface InquiryMessageService {
     void markReadByStore(Long inquiryId);
 
     void markReadByClient(Long inquiryId);
+
 }

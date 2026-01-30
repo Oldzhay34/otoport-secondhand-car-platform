@@ -38,25 +38,26 @@ public class SecurityConfig {
         ));
 
         http.authorizeHttpRequests(auth -> auth
-                // STATICS
                 .requestMatchers(
                         "/", "/favicon.ico",
-                        "/**/*.html",
+                        "/templates/**",
                         "/css/**", "/js/**",
                         "/images/**", "/imagesforapp/**",
                         "/uploads/**",
                         "/filejson/**"
                 ).permitAll()
 
-                // PUBLIC API
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/home/**").permitAll()
                 .requestMatchers("/api/stores/**").permitAll()
                 .requestMatchers("/api/listings/**").permitAll()
                 .requestMatchers("/api/visit/**").permitAll()
 
+                // ✅ Inquiry: guest YAZAMASIN
+                // - GET okumalar store/client tarafında zaten ayrı endpointlerde
+                // - vehicleinfo'dan mesaj atacaksa client login olmalı
+                .requestMatchers("/api/inquiries/**").hasRole("CLIENT")
 
-                // ROLE BASED API
                 .requestMatchers("/api/client/**").hasRole("CLIENT")
                 .requestMatchers("/api/store/**").hasRole("STORE")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

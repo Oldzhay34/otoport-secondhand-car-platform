@@ -5,10 +5,13 @@ import com.example.otoportdeneme.Enums.FuelType;
 import com.example.otoportdeneme.Enums.Transmission;
 import com.example.otoportdeneme.dto_Requests.StoreListingCreateRequest;
 import com.example.otoportdeneme.models.*;
-import com.example.otoportdeneme.repositories.*;
-import jakarta.transaction.Transactional;
+import com.example.otoportdeneme.repositories.ListingRepository;
+import com.example.otoportdeneme.repositories.StoreRepository;
+import com.example.otoportdeneme.repositories.StoreSubscriptionRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,22 +29,23 @@ public class StoreCreateListingServiceImpl implements StoreCreateListingService 
 
     private final StoreRepository storeRepository;
     private final ListingRepository listingRepository;
+    private final CatalogResolveService catalogResolveService;
+    private final StoreSubscriptionRepository storeSubscriptionRepository;
 
-    private final BrandRepository brandRepository;
-    private final CarModelRepository carModelRepository;
-    private final TrimRepository trimRepository;
+    // ✅ application.properties: app.upload.dir=./uploads
+    @Value("${app.upload.dir:./uploads}")
+    private String uploadDir;
 
     public StoreCreateListingServiceImpl(StoreRepository storeRepository,
                                          ListingRepository listingRepository,
-                                         BrandRepository brandRepository,
-                                         CarModelRepository carModelRepository,
-                                         TrimRepository trimRepository) {
+                                         CatalogResolveService catalogResolveService,
+                                         StoreSubscriptionRepository storeSubscriptionRepository) {
         this.storeRepository = storeRepository;
         this.listingRepository = listingRepository;
-        this.brandRepository = brandRepository;
-        this.carModelRepository = carModelRepository;
-        this.trimRepository = trimRepository;
+        this.catalogResolveService = catalogResolveService;
+        this.storeSubscriptionRepository = storeSubscriptionRepository;
     }
+
 
     @Override
     @Transactional
@@ -52,7 +56,6 @@ public class StoreCreateListingServiceImpl implements StoreCreateListingService 
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Store not found"));
 
-        // ---------- request basic validation ----------
         if (isBlank(req.getTitle())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "title zorunlu.");
         if (req.getPrice() == null || req.getPrice().compareTo(BigDecimal.ZERO) <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "price zorunlu ve > 0 olmalı.");
@@ -67,12 +70,10 @@ public class StoreCreateListingServiceImpl implements StoreCreateListingService 
         if (req.getYear() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "year zorunlu.");
         if (req.getKilometer() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "kilometer zorunlu.");
 
-        // enums zorunlu
         Transmission transmission = parseEnum(Transmission.class, req.getTransmission(), "transmission");
         FuelType fuelType = parseEnum(FuelType.class, req.getFuelType(), "fuelType");
         BodyType bodyType = parseEnum(BodyType.class, req.getBodyType(), "bodyType");
 
-        // ---------- images validation ----------
         List<MultipartFile> safeImages = (images == null) ? List.of() : images.stream()
                 .filter(f -> f != null && !f.isEmpty())
                 .toList();
@@ -81,33 +82,12 @@ public class StoreCreateListingServiceImpl implements StoreCreateListingService 
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "En fazla 10 resim yükleyebilirsin.");
         }
 
-        // ---------- Brand / Model / Trim resolve ----------
-        Brand brand = brandRepository.findByNameIgnoreCase(req.getBrand().trim())
-                .orElseGet(() -> {
-                    Brand b = new Brand();
-                    b.setName(req.getBrand().trim());
-                    return brandRepository.save(b);
-                });
-
-        CarModel model = carModelRepository.findByBrandIdAndNameIgnoreCase(brand.getId(), req.getModel().trim())
-                .orElseGet(() -> {
-                    CarModel m = new CarModel();
-                    m.setBrand(brand);
-                    m.setName(req.getModel().trim());
-                    return carModelRepository.save(m);
-                });
+        Brand brand = catalogResolveService.getOrCreateBrandNewTx(req.getBrand());
+        CarModel model = catalogResolveService.getOrCreateModelNewTx(brand.getId(), req.getModel());
 
         String trimName = buildTrimName(req);
+        Trim trim = catalogResolveService.getOrCreateTrimNewTx(model.getId(), trimName);
 
-        Trim trim = trimRepository.findByModelIdAndNameIgnoreCase(model.getId(), trimName)
-                .orElseGet(() -> {
-                    Trim t = new Trim();
-                    t.setModel(model);
-                    t.setName(trimName);
-                    return trimRepository.save(t);
-                });
-
-        // ---------- Car ----------
         Car car = new Car();
         car.setTrim(trim);
         car.setYear(req.getYear());
@@ -119,7 +99,6 @@ public class StoreCreateListingServiceImpl implements StoreCreateListingService 
         car.setFuelType(fuelType);
         car.setBodyType(bodyType);
 
-        // ---------- Listing ----------
         Listing listing = new Listing();
         listing.setStore(store);
         listing.setCar(car);
@@ -132,38 +111,40 @@ public class StoreCreateListingServiceImpl implements StoreCreateListingService 
         listing.setCity(req.getCity().trim());
         listing.setDistrict(blankToNull(req.getDistrict()));
 
-        // ---------- Save images ----------
         if (!safeImages.isEmpty()) {
-            List<String> savedPaths = saveToStaticUploads(safeImages);
+            List<String> publicUrls = saveToUploadsDir(safeImages);
             int sortOrder = 1;
 
-            for (int i = 0; i < savedPaths.size(); i++) {
+            for (int i = 0; i < publicUrls.size(); i++) {
                 ListingImage img = new ListingImage();
-                img.setImagePath(savedPaths.get(i));
+                img.setImagePath(publicUrls.get(i));   // ✅ "/uploads/<file>"
                 img.setSortOrder(sortOrder++);
                 img.setIsCover(i == 0);
                 listing.addImage(img);
             }
+
+            // ✅ eğer Listing içinde cover alanın varsa (opsiyonel)
+            // listing.setCoverImageUrl(publicUrls.get(0));
         }
 
         return listingRepository.save(listing);
     }
+
+    // =========================================================
+    // Helpers
+    // =========================================================
 
     private String buildTrimName(StoreListingCreateRequest req) {
         String variant = blankToNull(req.getVariant());
         String engine = blankToNull(req.getEngine());
         String pkg = blankToNull(req.getCarPackage());
 
-        // en anlamlı kombinasyon
-        // Variant + Engine + Package gibi
         List<String> parts = new ArrayList<>();
         if (variant != null) parts.add(variant);
         if (engine != null) parts.add(engine);
         if (pkg != null) parts.add(pkg);
 
         if (!parts.isEmpty()) return String.join(" - ", parts);
-
-        // en kötü model adı trim olsun
         return req.getModel().trim();
     }
 
@@ -188,8 +169,9 @@ public class StoreCreateListingServiceImpl implements StoreCreateListingService 
         return t.isBlank() ? null : t;
     }
 
-    private List<String> saveToStaticUploads(List<MultipartFile> files) {
-        Path dir = Paths.get("src/main/resources/static/uploads").toAbsolutePath().normalize();
+    // ✅ ÖNEMLİ: artık classpath altına değil, dosya sistemine yazıyoruz
+    private List<String> saveToUploadsDir(List<MultipartFile> files) {
+        Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
@@ -200,6 +182,8 @@ public class StoreCreateListingServiceImpl implements StoreCreateListingService 
         for (MultipartFile f : files) {
             String original = Optional.ofNullable(f.getOriginalFilename()).orElse("image");
             String ext = getSafeExtension(original);
+
+            // ✅ aynı milisaniyede çakışma olmasın diye nano + uuid
             String fileName = "img_" + Instant.now().toEpochMilli() + "_" + UUID.randomUUID() + ext;
 
             Path target = dir.resolve(fileName).normalize();
@@ -208,8 +192,11 @@ public class StoreCreateListingServiceImpl implements StoreCreateListingService 
             } catch (IOException e) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Resim kaydedilemedi: " + original);
             }
+
+            // ✅ public URL
             out.add("/uploads/" + fileName);
         }
+
         return out;
     }
 

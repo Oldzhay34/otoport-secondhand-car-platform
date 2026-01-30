@@ -79,11 +79,17 @@ async function apiGet(path) {
 
     return body;
 }
+
 function goAuditLogs() {
     window.location.href = "/templates/auditlog.html";
 }
 window.goAuditLogs = goAuditLogs;
 
+// ✅ WAL sayfasına git (eklendi)
+function goWal() {
+    window.location.href = "/templates/whiteaheadlogging.html";
+}
+window.goWal = goWal;
 
 async function postNoAuth(path) {
     try {
@@ -108,6 +114,46 @@ async function loadDaily() {
     setText("statClient", client);
     setText("statStore", store);
 }
+function esc(s){
+    return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;");
+}
+
+async function loadSpamAttempts(){
+    const date = todayTR();
+    const rows = await apiGet(`/api/admin/dashboard/spam-attempts?date=${encodeURIComponent(date)}`);
+
+    const list = Array.isArray(rows) ? rows : [];
+
+    // toplam attempt
+    const total = list.reduce((a,x) => a + Number(x.attempts ?? 0), 0);
+    setText("statSpamAttempts", total);
+
+    const box = $("spamActors");
+    if (!box) return;
+
+    if (list.length === 0){
+        box.innerHTML = `<div class="tiny muted">Bugün engellenen mesaj denemesi yok.</div>`;
+        return;
+    }
+
+    // top 8 göster
+    box.innerHTML = list.slice(0,8).map(x => {
+        const actorType = esc(x.actorType);
+        const actorId = x.actorId == null ? "—" : esc(x.actorId);
+        const attempts = esc(x.attempts);
+        return `
+      <div class="row">
+        <div><b>${actorType}</b> <span class="muted">#${actorId}</span></div>
+        <div><b>${attempts}</b> <span class="muted">deneme</span></div>
+      </div>
+    `;
+    }).join("");
+}
+
 
 window.addEventListener("DOMContentLoaded", async () => {
     initThemeToggle();
@@ -121,10 +167,10 @@ window.addEventListener("DOMContentLoaded", async () => {
         window.location.href = "/templates/login.html";
     });
 
-
     try {
         showErr("");
         await loadDaily();
+        await loadSpamAttempts();
     } catch (e) {
         console.error("[ADMINHOME] ERROR", e);
         showErr("Veri alınamadı: " + (e.message || e));
@@ -132,10 +178,11 @@ window.addEventListener("DOMContentLoaded", async () => {
         setText("statGuest", 0);
         setText("statClient", 0);
         setText("statStore", 0);
+        setText("statSpamAttempts", 0);
     }
+
 
     await fetch(API_BASE + "/api/visit?target=" + encodeURIComponent("/templates/adminhome.html"), {
         method: "POST"
     });
-
 });

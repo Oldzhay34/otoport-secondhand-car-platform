@@ -1,5 +1,6 @@
 package com.example.otoportdeneme.controllers;
 
+import com.example.otoportdeneme.dto_Objects.admin.SpamAttemptActorDto;
 import com.example.otoportdeneme.dto_Response.AdminDailyStatsDto;
 import com.example.otoportdeneme.dto_Response.HourlyPointDto;
 import com.example.otoportdeneme.dto_Response.StoreActivityDto;
@@ -40,5 +41,11 @@ public class AdminAnalyticsController {
         LocalDate d = (date == null || date.isBlank()) ? LocalDate.now(tr) : LocalDate.parse(date);
         return svc.storeActivity(d);
     }
+    @GetMapping("/api/admin/dashboard/spam-attempts")
+    public List<SpamAttemptActorDto> spamAttempts(@RequestParam String date) {
+        LocalDate d = LocalDate.parse(date);
+        return svc.spamAttemptActors(d);
+    }
+
 
 }

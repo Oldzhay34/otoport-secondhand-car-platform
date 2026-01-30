@@ -139,7 +139,7 @@ public class DevSeedConfig {
             b.setName(n);
             return brandRepo.saveAndFlush(b);
         } catch (DataIntegrityViolationException e) {
-            return brandRepo.findByName(n)
+            return brandRepo.findByNameIgnoreCase(n)
                     .orElseThrow(() -> new IllegalStateException(
                             "Brand duplicate but cannot load by exact name: [" + n + "]. " +
                                     "brands tablosunu kontrol et.", e));

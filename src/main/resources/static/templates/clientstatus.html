@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Otoport - Client Status</title>
+
+    <link rel="stylesheet" href="/css/adminhome.css" />
+    <link rel="stylesheet" href="/css/clientstatus.css" />
+</head>
+
+<body data-theme="dark">
+<header class="topbar">
+    <div class="brand">OTOPORT • Admin</div>
+
+    <div class="right">
+        <label class="theme">
+            <span>Light</span>
+            <input id="themeToggle" type="checkbox" />
+            <span>Dark</span>
+        </label>
+
+        <button class="ghost" type="button" onclick="window.location.href='/templates/adminhome.html'">
+            Dashboard
+        </button>
+
+        <button class="ghost" type="button" onclick="goAuditLogs()">audit logları</button>
+        <button class="btn ghost" type="button" onclick="goWal()">WAL</button>
+
+        <button id="logoutBtn" class="btn">logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <div class="page-head">
+        <div>
+            <h1>Kullanıcı Durum Yönetimi</h1>
+            <div class="sub">Tüm client hesaplarını aktif/pasif yap</div>
+        </div>
+
+        <div class="actions">
+            <input id="q" class="search" type="search" placeholder="Ara: ad, soyad, email..." />
+            <button id="refreshBtn" class="ghost" type="button">Yenile</button>
+        </div>
+    </div>
+
+    <div id="alertOk" class="alert ok"></div>
+    <div id="alertErr" class="alert err"></div>
+
+    <section class="card span2">
+        <div class="card-top">
+            <h3>Client Listesi</h3>
+            <span class="muted tiny" id="count">—</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="table" id="tbl">
+                <thead>
+                <tr>
+                    <th style="width:90px;">ID</th>
+                    <th>Ad Soyad</th>
+                    <th>Email</th>
+                    <th style="width:140px;">Durum</th>
+                    <th style="width:220px;">İşlem</th>
+                </tr>
+                </thead>
+                <tbody id="tbody">
+                <tr><td colspan="5" class="muted">Yükleniyor…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer class="foot">© Otoport</footer>
+</main>
+
+<script src="/js/clientstatus.js" defer></script>
+</body>
+</html>

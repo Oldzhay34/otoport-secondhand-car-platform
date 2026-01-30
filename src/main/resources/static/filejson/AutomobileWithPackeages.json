@@ -915,9 +915,91 @@
                 "Touring M Sport",
                 "40th Year Edition"
               ]
-            }
+            },
+            {
+              "variant": "320d xDrive GT",
+              "packages": ["Gran Turismo", "Luxury", "Modern Line", "M Sport", "Premium", "Prestige", "Sport Line", "Techno Plus"]
+            },
+
+            {
+              "variant": "320i",
+              "packages": [
+                "320i",
+                "Edition M Sport",
+                "Executive M Sport",
+                "50 Jahre Edition",
+                "50th Year M Edition",
+                "Cabrio",
+                "First Edition Luxury Line",
+                "First Edition Sport Line",
+                "First Edition M Sport",
+                "Gran Turismo",
+                "Luxury Line",
+                "M Sport",
+                "Premium",
+                "Sport Line",
+                "Touring"
+              ]
+            },
+
+            {
+              "variant": "320i ED",
+              "packages": [
+                "40th Year Edition",
+                "Edition",
+                "Luxury Line",
+                "Luxury Line Plus",
+                "Luxury M Plus",
+                "Modern Line",
+                "Modern Line Plus",
+                "M Plus",
+                "M Sport",
+                "Sport Line",
+                "Sport Plus",
+                "Standart",
+                "Techno Plus"
+              ]
+            },
+
+            { "variant": "320si", "note": "tek paket" },
+            { "variant": "320td", "packages": ["Compact"] },
+            { "variant": "323Ci", "note": "tek paket" },
+            { "variant": "323i", "packages": ["Standart"] },
+            { "variant": "324d", "note": "tek paket" },
+            { "variant": "325Ci", "note": "tek paket" },
+
+            { "variant": "325i", "packages": ["Standart", "Cabrio", "Touring"] },
+            { "variant": "325i xDrive", "packages": ["Standart"] },
+            { "variant": "325tds", "packages": ["Standart", "Touring"] },
+            { "variant": "325xi", "packages": ["Standart"] },
+
+            { "variant": "328Ci", "note": "tek paket" },
+            { "variant": "328i", "packages": ["328i", "Luxury Line", "M Sport", "Sport Line"] },
+            { "variant": "328i xDrive", "packages": ["328i"] },
+
+            { "variant": "330Cd", "note": "tek paket" },
+            { "variant": "330Ci", "note": "tek paket" },
+            { "variant": "330d", "packages": ["Standart", "M Sport", "Touring"] },
+            { "variant": "330i", "packages": ["Standart", "Edition Sport Line", "M Sport"] },
+            { "variant": "330i xDrive", "packages": ["Edition M Sport", "M Sport"] },
+            { "variant": "330xd", "packages": ["Standart", "Touring"] },
+            { "variant": "330xi", "packages": ["Standart"] },
+
+            { "variant": "335d", "note": "tek paket" },
+            { "variant": "335i", "packages": ["Standart"] },
+
+            { "variant": "340d xDrive", "packages": ["Touring M Sport"] },
+            { "variant": "340i xDrive", "packages": ["340i x drive"] }
+          ]
+        },
+        {
+          "model": "4 Serisi",
+          "variants": [
+            { "variant": "418d", "packages": ["M Plus"] },
+            { "variant": "418d Gran Coupe", "packages": ["Prestige", "Sport Plus", "Ultimate M Sport"] }
           ]
         }
+
       ]
     }
 

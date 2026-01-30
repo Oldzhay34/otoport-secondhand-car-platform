@@ -1,8 +1,10 @@
 package com.example.otoportdeneme.dto_Requests;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StoreListingCreateRequest {
 
     @NotBlank @Size(max = 150)

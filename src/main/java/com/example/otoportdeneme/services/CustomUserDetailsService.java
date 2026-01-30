@@ -29,10 +29,17 @@ public class CustomUserDetailsService implements AppUserDetailsService {
         }
 
         String role = "ROLE_" + ua.getActorType().name(); // ADMIN/STORE/CLIENT
+
+        System.out.println("CDS email=" + ua.getEmail()
+                + " actorType=" + ua.getActorType()
+                + " status=" + ua.getStatus());
+
         return User.withUsername(ua.getEmail())
                 .password(ua.getPasswordHash())
                 .authorities(role)
                 .build();
+
+
 
     }
 

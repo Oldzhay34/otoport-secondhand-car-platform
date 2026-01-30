@@ -527,13 +527,4 @@ document.addEventListener("DOMContentLoaded", async () => {
         showAlert("err", e.message || "İlan bilgisi alınamadı.");
     }
 });
-console.log("JS LOADED");
-
-const id = getIdFromQuery();
-console.log("ID =", id);
-
-saveBtn.addEventListener("click", async () => {
-    console.log("SAVE CLICKED");
-    await saveListing(id);
-});
 

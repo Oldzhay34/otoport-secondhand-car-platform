@@ -9,9 +9,7 @@ import java.util.List;
 
 public interface InquiryMessageRepository extends JpaRepository<InquiryMessage, Long> {
 
-    List<InquiryMessage> findByInquiryIdOrderBySentAtAsc(Long inquiryId);
 
-    long countByInquiryIdAndReadByStoreFalse(Long inquiryId);
     long countByInquiryIdAndReadByClientFalse(Long inquiryId);
 
     // ✅ arşivlenecek inquiry id listesi
@@ -65,12 +63,59 @@ public interface InquiryMessageRepository extends JpaRepository<InquiryMessage, 
       order by function('hour', m.sentAt)
     """)
     List<Object[]> countHourly(Instant start, Instant end);
+
+
     @Query("""
-      select m.inquiry.store.id, count(m)
-      from InquiryMessage m
-      where m.sentAt >= :start and m.sentAt < :end
-      group by m.inquiry.store.id
+        select m
+        from InquiryMessage m
+        where m.inquiry.id = :inquiryId
+        order by m.sentAt asc
     """)
-    List<Object[]> countByStoreBetween(Instant start, Instant end);
+    List<InquiryMessage> findAllByInquiryIdOrderBySentAt(@Param("inquiryId") Long inquiryId);
+
+    @Query("""
+        select m.inquiry.store.id, count(m)
+        from InquiryMessage m
+        where m.sentAt >= :start and m.sentAt < :end
+        group by m.inquiry.store.id
+    """)
+    List<Object[]> countByStoreBetween(@Param("start") Instant start, @Param("end") Instant end);
+
+    @Query("""
+        select m
+        from InquiryMessage m
+        where m.inquiry.id = :inquiryId
+        order by m.sentAt asc
+    """)
+    List<InquiryMessage> findByInquiryIdOrderBySentAtAsc(@Param("inquiryId") Long inquiryId);
+
+    @Query("""
+        select count(m)
+        from InquiryMessage m
+        where m.inquiry.id = :inquiryId
+          and m.senderType = 'CLIENT'
+          and m.readByStore = false
+    """)
+    long countUnreadForStore(@Param("inquiryId") Long inquiryId);
+
+    // controller’da kullandığın isim buydu → aynı bırakıyorum
+    @Query("""
+        select count(m)
+        from InquiryMessage m
+        where m.inquiry.id = :inquiryId
+          and m.readByStore = false
+    """)
+    long countByInquiryIdAndReadByStoreFalse(@Param("inquiryId") Long inquiryId);
+
+    @Modifying
+    @Query("""
+        update InquiryMessage m
+        set m.readByStore = true
+        where m.inquiry.id = :inquiryId
+          and m.senderType = 'CLIENT'
+          and m.readByStore = false
+    """)
+    int markReadByStore(@Param("inquiryId") Long inquiryId);
+
 
 }

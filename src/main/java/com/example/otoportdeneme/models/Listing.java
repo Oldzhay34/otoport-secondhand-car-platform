@@ -29,7 +29,8 @@ public class Listing {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    @ManyToOne(fetch = FetchType.LAZY) // cascade yok
+    @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
+// istersen: cascade = {CascadeType.PERSIST, CascadeType.MERGE}
     @JoinColumn(name = "car_id", nullable = false)
     private Car car;
 

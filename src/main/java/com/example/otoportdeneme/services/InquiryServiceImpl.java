@@ -1,12 +1,14 @@
 package com.example.otoportdeneme.services;
 
-import com.example.otoportdeneme.Enums.AuditAction;
-import com.example.otoportdeneme.Enums.NotificationType;
-import com.example.otoportdeneme.Enums.SenderType;
+import com.example.otoportdeneme.Enums.*;
+import com.example.otoportdeneme.models.*;
 import com.example.otoportdeneme.repositories.*;
 import jakarta.transaction.Transactional;
-import com.example.otoportdeneme.models.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @Service
 public class InquiryServiceImpl implements InquiryService {
@@ -18,13 +20,18 @@ public class InquiryServiceImpl implements InquiryService {
     private final AuditService auditService;
     private final NotificationService notificationService;
 
+    private final MessageModerationService moderationService;                 // ✅
+    private final MessageModerationAttemptRepository attemptRepo;             // ✅
+
     public InquiryServiceImpl(
             InquiryRepository inquiryRepository,
             InquiryMessageRepository messageRepository,
             ListingRepository listingRepository,
             ClientRepository clientRepository,
             AuditService auditService,
-            NotificationService notificationService
+            NotificationService notificationService,
+            MessageModerationService moderationService,
+            MessageModerationAttemptRepository attemptRepo
     ) {
         this.inquiryRepository = inquiryRepository;
         this.messageRepository = messageRepository;
@@ -32,41 +39,62 @@ public class InquiryServiceImpl implements InquiryService {
         this.clientRepository = clientRepository;
         this.auditService = auditService;
         this.notificationService = notificationService;
+        this.moderationService = moderationService;
+        this.attemptRepo = attemptRepo;
     }
 
     // ================= GUEST =================
 
     @Override
     @Transactional
-    public Long createInquiryGuest(
-            Long listingId,
-            String guestName,
-            String guestEmail,
-            String guestPhone,
-            String firstMessage,
-            String ip,
-            String userAgent
-    ) {
+    public Long createInquiryGuest(Long listingId, String guestName, String guestEmail, String guestPhone,
+                                   String firstMessage, String ip, String userAgent) {
+
+        if (firstMessage == null || firstMessage.trim().isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "message required");
+
         Listing listing = listingRepository.findById(listingId)
                 .orElseThrow(() -> new IllegalArgumentException("Listing not found"));
 
+        // inquiry oluştur
         Inquiry inquiry = new Inquiry();
         inquiry.setListing(listing);
         inquiry.setStore(listing.getStore());
         inquiry.setGuestName(guestName);
         inquiry.setGuestEmail(guestEmail);
         inquiry.setGuestPhone(guestPhone);
+        inquiry.setStatus(InquiryStatus.OPEN);
         inquiryRepository.save(inquiry);
+
+        // ✅ MODERATION: ilk mesaj kontrol
+        var res = moderationService.check(firstMessage.trim());
+        if (!res.isAllowed()) {
+            inquiry.setStatus(InquiryStatus.SPAM);
+            inquiryRepository.save(inquiry);
+
+            MessageModerationAttempt a = new MessageModerationAttempt();
+            a.setActorType(ActorType.GUEST);
+            a.setActorId(null);
+            a.setInquiryId(inquiry.getId());
+            a.setReason(res.getReason());
+            a.setHitCount(res.getHitCount());
+            a.setMatchedPreview(String.join(",", res.getMatches() == null ? List.of() : res.getMatches()));
+            a.setIpAddress(ip);
+            a.setUserAgent(userAgent);
+            attemptRepo.save(a);
+
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Mesaj gönderilemedi (uygunsuz içerik tespit edildi)");
+        }
 
         InquiryMessage msg = new InquiryMessage();
         msg.setInquiry(inquiry);
         msg.setSenderType(SenderType.GUEST);
-        msg.setContent(firstMessage);
+        msg.setContent(firstMessage.trim());
         msg.setReadByStore(false);
         msg.setReadByClient(true);
         messageRepository.save(msg);
 
-        // 🔔 Store bildirimi
         notificationService.notify(
                 listing.getStore(),
                 NotificationType.NEW_MESSAGE,
@@ -82,13 +110,11 @@ public class InquiryServiceImpl implements InquiryService {
 
     @Override
     @Transactional
-    public Long createInquiryClient(
-            Long listingId,
-            Long clientId,
-            String firstMessage,
-            String ip,
-            String userAgent
-    ) {
+    public Long createInquiryClient(Long listingId, Long clientId, String firstMessage, String ip, String userAgent) {
+
+        if (firstMessage == null || firstMessage.trim().isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "message required");
+
         Listing listing = listingRepository.findById(listingId)
                 .orElseThrow(() -> new IllegalArgumentException("Listing not found"));
 
@@ -99,18 +125,49 @@ public class InquiryServiceImpl implements InquiryService {
         inquiry.setListing(listing);
         inquiry.setStore(listing.getStore());
         inquiry.setClient(client);
+        inquiry.setStatus(InquiryStatus.OPEN);
         inquiryRepository.save(inquiry);
+
+        // ✅ MODERATION: ilk mesaj kontrol
+        var res = moderationService.check(firstMessage.trim());
+        if (!res.isAllowed()) {
+            inquiry.setStatus(InquiryStatus.SPAM);
+            inquiryRepository.save(inquiry);
+
+            MessageModerationAttempt a = new MessageModerationAttempt();
+            a.setActorType(ActorType.CLIENT);
+            a.setActorId(clientId);
+            a.setInquiryId(inquiry.getId());
+            a.setReason(res.getReason());
+            a.setHitCount(res.getHitCount());
+            a.setMatchedPreview(String.join(",", res.getMatches() == null ? List.of() : res.getMatches()));
+            a.setIpAddress(ip);
+            a.setUserAgent(userAgent);
+            attemptRepo.save(a);
+
+            auditService.log(
+                    client,
+                    AuditAction.UPDATE,
+                    "Inquiry",
+                    inquiry.getId(),
+                    "Blocked first message reason=" + res.getReason() + " matches=" + res.getMatches(),
+                    ip,
+                    userAgent
+            );
+
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Mesaj gönderilemedi (uygunsuz içerik tespit edildi)");
+        }
 
         InquiryMessage msg = new InquiryMessage();
         msg.setInquiry(inquiry);
         msg.setSenderType(SenderType.CLIENT);
         msg.setClientSender(client);
-        msg.setContent(firstMessage);
+        msg.setContent(firstMessage.trim());
         msg.setReadByStore(false);
         msg.setReadByClient(true);
         messageRepository.save(msg);
 
-        // 🔔 Store bildirimi
         notificationService.notify(
                 listing.getStore(),
                 NotificationType.NEW_MESSAGE,
@@ -119,7 +176,6 @@ public class InquiryServiceImpl implements InquiryService {
                 null
         );
 
-        // 🧾 Audit
         auditService.log(
                 client,
                 AuditAction.CREATE,

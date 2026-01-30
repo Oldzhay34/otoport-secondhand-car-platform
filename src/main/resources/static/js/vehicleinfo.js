@@ -16,6 +16,11 @@ const FAV_LIST_URL = `${API_BASE}/api/client/favorites`;
 
 const VIEW_ONCE_URL = (id) => `${API_BASE}/api/client/listings/${id}/view`;
 
+// ✅ INQUIRY (CLIENT ONLY)
+const INQ_UPSERT_URL = `${API_BASE}/api/client/inquiries/upsert`; // POST
+const INQ_THREAD_BY_LISTING_URL = (listingId) =>
+    `${API_BASE}/api/client/inquiries/thread?listingId=${encodeURIComponent(listingId)}`; // GET
+
 // -------------------- DOM HELPERS --------------------
 function $(id) { return document.getElementById(id); }
 
@@ -61,6 +66,17 @@ const sketchOutline = $("sketchOutline");
 const sketchParts = $("sketchParts");
 const sketchHint = $("sketchHint");
 
+// ---- Inquiry UI refs ----
+const guestFields = $("guestFields");
+const guestName = $("guestName");
+const guestEmail = $("guestEmail");
+const guestPhone = $("guestPhone");
+
+const msgTa = $("msg");
+const sendBtn = $("sendBtn");
+const inquiryHint = $("inquiryHint");
+const messagesEl = $("messages");
+
 // -------------------- UI HELPERS --------------------
 function showAlert(type, msg) {
     if (!alertBox) return;
@@ -72,6 +88,11 @@ function hideAlert() {
     if (!alertBox) return;
     alertBox.style.display = "none";
     alertBox.textContent = "";
+}
+
+function setInquiryHint(text) {
+    if (!inquiryHint) return;
+    inquiryHint.textContent = text || "—";
 }
 
 function applyThemeFromStorage() {
@@ -143,9 +164,21 @@ function getTokenOrNull() {
     return t && t.trim() ? t.trim() : null;
 }
 
-// Türkçe dosya isimleri + boşluklar için güvenli url
 function asset(path) {
     return encodeURI(path);
+}
+
+function fmtDate(iso) {
+    if (!iso) return "—";
+    try {
+        const d = new Date(iso);
+        return new Intl.DateTimeFormat("tr-TR", {
+            year: "numeric", month: "2-digit", day: "2-digit",
+            hour: "2-digit", minute: "2-digit"
+        }).format(d);
+    } catch {
+        return iso;
+    }
 }
 
 // -------------------- FETCH --------------------
@@ -184,9 +217,7 @@ async function fetchJsonAuth(url, options = {}) {
         ? await res.json().catch(() => null)
         : await res.text().catch(() => null);
 
-    if (res.status === 401 || res.status === 403) {
-        throw new Error("Unauthorized");
-    }
+    if (res.status === 401 || res.status === 403) throw new Error("Unauthorized");
 
     if (!res.ok) {
         const msg =
@@ -232,15 +263,35 @@ async function toggleFavorite(listingId, currentIsFav) {
     return !currentIsFav;
 }
 
-// -------------------- GALLERY --------------------
+// -------------------- GALLERY (✅ FIXED) --------------------
 let galleryUrls = [];
 let galleryIndex = 0;
 
+function toPublicImg(u) {
+    if (!u) return null;
+
+    const s = String(u).trim();
+    if (!s) return null;
+
+    // absolute url
+    if (s.startsWith("http://") || s.startsWith("https://")) return s;
+
+    // already root-based like /uploads/... or /images...
+    if (s.startsWith("/")) return s;
+
+    // "uploads/abc.jpg" => "/uploads/abc.jpg"
+    if (s.startsWith("uploads/")) return "/" + s;
+
+    // only filename => assume uploads
+    return "/uploads/" + s;
+}
+
 function setMainImageByIndex(idx) {
     if (!galleryUrls.length) return;
-    galleryIndex = (idx + galleryUrls.length) % galleryUrls.length;
 
+    galleryIndex = (idx + galleryUrls.length) % galleryUrls.length;
     const url = galleryUrls[galleryIndex];
+
     if (mainImg) mainImg.src = url;
 
     thumbs?.querySelectorAll(".thumb").forEach(t => t.classList.remove("active"));
@@ -250,13 +301,18 @@ function setMainImageByIndex(idx) {
 
 function renderGallery(detail) {
     const imgs = Array.isArray(detail?.images) ? detail.images : [];
-    galleryUrls = imgs.map(x => x?.imagePath).filter(Boolean);
+
+    galleryUrls = imgs
+        .map(x => toPublicImg(x?.imagePath))
+        .filter(Boolean);
 
     if (!galleryUrls.length) {
-        galleryUrls = [detail?.coverImageUrl || "/imagesforapp/logo2.png"];
+        const cover = toPublicImg(detail?.coverImageUrl);
+        galleryUrls = [cover || "/imagesforapp/logo2.png"];
     }
 
     if (thumbs) thumbs.innerHTML = "";
+
     galleryUrls.forEach((url, i) => {
         const div = document.createElement("div");
         div.className = "thumb" + (i === 0 ? " active" : "");
@@ -270,6 +326,13 @@ function renderGallery(detail) {
     if (nextBtn) nextBtn.onclick = () => setMainImageByIndex(galleryIndex + 1);
 
     setMainImageByIndex(0);
+
+    // main image fallback (broken)
+    if (mainImg) {
+        mainImg.onerror = () => { mainImg.src = "/imagesforapp/logo2.png"; };
+    }
+
+    console.log("[vehicleinfo] galleryUrls =", galleryUrls);
 }
 
 // -------------------- KV RENDER --------------------
@@ -378,11 +441,7 @@ function trPartName(part) {
 }
 
 /* -------------------- ✅ KROKİ (AUTO PATH FIX) -------------------- */
-
-// Sende var olan dosya adı (değiştirmiyoruz)
 const BASE_FILE = "expertiz raporu cam ve lastikk.png";
-
-// Parça enum -> dosya adı (değiştirmiyoruz)
 const PART_FILE = {
     HOOD: "ekspertiz kaput.png",
     ROOF: "ekspertiz tavan.png",
@@ -398,10 +457,8 @@ const PART_FILE = {
     REAR_RIGHT_FENDER: "ekspertiz sağ arka çamurluk.png",
     TRUNK_LID: "ekspertiz bagaj.png"
 };
-
 const ALL_PARTS = Object.keys(PART_FILE);
 
-// Otomatik kök + klasör tespiti
 let ASSET_CONF = null;
 
 async function urlExists(u) {
@@ -414,19 +471,15 @@ async function urlExists(u) {
 }
 
 async function detectAssetConfig() {
-    // denenebilecek root/folder kombinasyonları
     const roots = ["/images", "../images", "./images"];
-    const folders = ["expertiz", "ekspertiz"]; // iki ihtimali de dene
+    const folders = ["expertiz", "ekspertiz"];
 
     for (const root of roots) {
         for (const folder of folders) {
             const testUrl = asset(`${root}/${folder}/${BASE_FILE}`);
-            if (await urlExists(testUrl)) {
-                return { root, folder };
-            }
+            if (await urlExists(testUrl)) return { root, folder };
         }
     }
-    // hiçbirini bulamazsa yine de varsayılanı döndür
     return { root: "/images", folder: "expertiz" };
 }
 
@@ -443,10 +496,10 @@ function partUrl(enumPart) {
 
 function fillColorByStatus(statusEnum) {
     switch (statusEnum) {
-        case "REPLACED": return "#ef4444";    // kırmızı
-        case "PAINTED": return "#3b82f6";     // mavi
-        case "LOCAL_PAINT": return "#f97316";// turuncu
-        default: return null;                // ORIGINAL boyanmaz
+        case "REPLACED": return "#ef4444";
+        case "PAINTED": return "#3b82f6";
+        case "LOCAL_PAINT": return "#f97316";
+        default: return null;
     }
 }
 
@@ -459,15 +512,6 @@ function renderSketchFromExpert(report) {
     if (!carSketchPanel || !sketchParts || !sketchOutline) return;
 
     const rawItems = Array.isArray(report?.items) ? report.items : [];
-
-    // debug
-    if (rawItems.length) {
-        console.log("[KROKİ] items sample (json):", JSON.stringify(rawItems.slice(0, 8), null, 2));
-    } else {
-        console.log("[KROKİ] items empty");
-    }
-
-    // eksik parçaları ORIGINAL ile tamamla (kroki “tam gövde” görünsün diye)
     const seen = new Set(rawItems.map(x => String(x?.part || "").trim()));
     const filled = ALL_PARTS
         .filter(p => !seen.has(p))
@@ -475,11 +519,9 @@ function renderSketchFromExpert(report) {
 
     const items = rawItems.concat(filled);
 
-    // temizle
     sketchOutline.innerHTML = "";
     sketchParts.innerHTML = "";
 
-    // 1) OUTLINE: tüm parçaları gri çiz
     for (const p of ALL_PARTS) {
         const m = partUrl(p);
         if (!m) continue;
@@ -492,7 +534,6 @@ function renderSketchFromExpert(report) {
         sketchOutline.appendChild(div);
     }
 
-    // 2) RENKLİ: sadece REPLACED/PAINTED/LOCAL_PAINT üstüne boya
     let paintedCount = 0;
     for (const it of items) {
         const p = String(it?.part || "").trim();
@@ -513,18 +554,9 @@ function renderSketchFromExpert(report) {
         paintedCount++;
     }
 
-    // hint
     if (sketchHint) {
-        const notesLower = items.map(x => String(x?.note || "").toLowerCase());
-        const isDefaultReport = items.length > 0 && notesLower.every(n => n.includes("varsayılan"));
-
-        if (isDefaultReport) {
-            sketchHint.textContent = "Mağaza expertiz girmedi (varsayılan rapor).";
-        } else if (paintedCount === 0) {
-            sketchHint.textContent = "Değişen / boyalı / lokal boya parça yok.";
-        } else {
-            sketchHint.textContent = `${paintedCount} parça kroki üzerinde renklendirildi.`;
-        }
+        if (paintedCount === 0) sketchHint.textContent = "Değişen / boyalı / lokal boya parça yok.";
+        else sketchHint.textContent = `${paintedCount} parça kroki üzerinde renklendirildi.`;
     }
 }
 
@@ -539,7 +571,6 @@ function renderExpert(report) {
         if (expertNotes) expertNotes.style.display = "none";
         if (expertTable) expertTable.style.display = "none";
         if (expertTbody) expertTbody.innerHTML = "";
-
         renderSketchFromExpert(null);
         return;
     }
@@ -603,7 +634,7 @@ async function loadExpertReportByListingId(listingId, detail) {
         const report = await fetchJson(EXPERT_BY_LISTING_URL(listingId), { method: "GET", headers });
         renderExpert(report);
         return;
-    } catch {}
+    } catch { }
 
     const carId = detail?.car?.id;
     if (carId) {
@@ -611,10 +642,143 @@ async function loadExpertReportByListingId(listingId, detail) {
             const report = await fetchJson(EXPERT_BY_CAR_URL(carId), { method: "GET", headers });
             renderExpert(report);
             return;
-        } catch {}
+        } catch { }
     }
 
     renderExpert(null);
+}
+
+// -------------------- INQUIRY (CLIENT ONLY) --------------------
+let currentListingId = null;
+let currentStoreId = null;
+
+function setGuestModeVisible(visible) {
+    if (!guestFields) return;
+    guestFields.style.display = visible ? "grid" : "none";
+}
+
+function renderMessageBubble(m) {
+    const cls = (m.senderType === "STORE") ? "bubble store" : "bubble client";
+    const who = (m.senderType === "STORE") ? "Mağaza" : "Müşteri";
+    return `
+    <div class="${cls}">
+      <div>${escapeHtml(m.content || "")}</div>
+      <div class="meta">
+        <span>${escapeHtml(who)}</span>
+        <span>•</span>
+        <span>${escapeHtml(fmtDate(m.sentAt))}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderThread(thread) {
+    if (!messagesEl) return;
+    const msgs = Array.isArray(thread?.messages) ? thread.messages : [];
+    if (!msgs.length) {
+        messagesEl.innerHTML = `<div class="muted tiny">Henüz mesaj yok.</div>`;
+        return;
+    }
+    messagesEl.innerHTML = msgs.map(renderMessageBubble).join("");
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// ✅ listingId ile thread getir (AUTH zorunlu)
+async function loadThreadByListing(listingId) {
+    if (!listingId) return null;
+    const data = await fetchJsonAuth(INQ_THREAD_BY_LISTING_URL(listingId), { method: "GET" });
+    renderThread(data);
+    return data;
+}
+
+// ✅ upsert + mesaj gönder (AUTH zorunlu)
+async function upsertInquiryAndSendMessage({ listingId, storeId, message }) {
+    return await fetchJsonAuth(INQ_UPSERT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId, storeId, message })
+    });
+}
+
+// ✅ SEND button handler (CLIENT ONLY)
+async function handleSendClick() {
+    hideAlert();
+
+    const token = getTokenOrNull();
+    if (!token) {
+        showAlert("err", "Mesaj göndermek için giriş yapmalısın.");
+        setInquiryHint("Giriş yapmalısın.");
+        return;
+    }
+
+    if (!currentListingId || !currentStoreId) {
+        showAlert("err", "İlan/mağaza bilgisi yok.");
+        return;
+    }
+
+    const text = (msgTa?.value || "").trim();
+    if (!text) {
+        showAlert("err", "Mesaj boş olamaz.");
+        return;
+    }
+
+    try {
+        sendBtn && (sendBtn.disabled = true);
+        setInquiryHint("Gönderiliyor...");
+
+        await upsertInquiryAndSendMessage({
+            listingId: currentListingId,
+            storeId: currentStoreId,
+            message: text
+        });
+
+        msgTa.value = "";
+        showAlert("ok", "Mesaj gönderildi.");
+
+        await loadThreadByListing(currentListingId);
+
+        setInquiryHint("Mesaj yazıp Gönder'e bas.");
+    } catch (e) {
+        console.error(e);
+        const msg = String(e?.message || "");
+        if (msg.toLowerCase().includes("unauthorized")) {
+            showAlert("err", "Oturum süren dolmuş. Tekrar giriş yap.");
+            localStorage.removeItem(TOKEN_KEY);
+            window.location.href = "/templates/Login.html";
+            return;
+        }
+        showAlert("err", msg || "Mesaj gönderilemedi.");
+        setInquiryHint("—");
+    } finally {
+        sendBtn && (sendBtn.disabled = false);
+    }
+}
+
+async function initInquiryUI(detail) {
+    currentListingId = detail?.id || currentListingId;
+    currentStoreId = detail?.store?.id || currentStoreId;
+
+    // guest kapalı (UI gizle)
+    setGuestModeVisible(false);
+
+    if (!currentListingId || !currentStoreId) {
+        setInquiryHint("Mesajlaşma için ilan/mağaza bilgisi eksik.");
+        sendBtn && (sendBtn.disabled = true);
+        return;
+    }
+
+    const token = getTokenOrNull();
+    if (!token) {
+        setInquiryHint("Mesaj göndermek için giriş yapmalısın.");
+        sendBtn && (sendBtn.disabled = true);
+        renderThread({ messages: [] });
+        return;
+    }
+
+    setInquiryHint("Mesaj yazıp Gönder'e bas.");
+    sendBtn && (sendBtn.disabled = false);
+
+    await loadThreadByListing(currentListingId).catch(() => { });
 }
 
 // -------------------- MAIN LOAD --------------------
@@ -626,6 +790,9 @@ async function loadDetail(listingId) {
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
     const detail = await fetchJson(DETAIL_URL(listingId), { method: "GET", headers });
+
+    currentListingId = detail?.id || listingId;
+    currentStoreId = detail?.store?.id || null;
 
     if (titleEl) titleEl.textContent = detail.title || "İlan";
     if (priceEl) priceEl.textContent = money(detail.price, detail.currency);
@@ -652,7 +819,7 @@ async function loadDetail(listingId) {
                 const cur = Number(viewTotalEl?.textContent || "0") || 0;
                 if (viewTotalEl) viewTotalEl.textContent = String(cur + 1);
             })
-            .catch(() => {});
+            .catch(() => { });
     }
 
     const hasToken = !!token;
@@ -687,17 +854,20 @@ async function loadDetail(listingId) {
             }
         };
     }
+
+    // ✅ inquiry init
+    await initInquiryUI(detail);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+    console.log("[vehicleinfo] loaded");
+
     applyThemeFromStorage();
     initThemeToggle();
 
-    // ✅ Asset kökünü otomatik bul
     ASSET_CONF = await detectAssetConfig();
     console.log("[KROKİ] asset config:", ASSET_CONF);
 
-    // ✅ base görseli yükle
     initSketchImages();
 
     const id = getListingIdFromQuery();
@@ -705,6 +875,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         showAlert("err", "İlan id bulunamadı. Filtre sayfasından tekrar tıkla.");
         return;
     }
+
+    console.log("sendBtn =", sendBtn);
+    sendBtn?.addEventListener("click", () => {
+        console.log("SEND CLICK");
+        handleSendClick();
+    });
 
     try {
         await loadDetail(id);

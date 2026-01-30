@@ -28,26 +28,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
+        // ✅ auth endpointleri serbest
         if (path.startsWith("/api/auth/")) return true;
 
+        // ✅ statikler serbest
         return path.startsWith("/css/")
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")
                 || path.startsWith("/imagesforapp/")
                 || path.startsWith("/uploads/")
-                || path.startsWith("/FileJson/")
                 || path.startsWith("/filejson/")
-                || path.endsWith(".html")
-                || path.endsWith(".css")
-                || path.endsWith(".js")
-                || path.endsWith(".json")
-                || path.endsWith(".png")
-                || path.endsWith(".jpg")
-                || path.endsWith(".jpeg")
-                || path.endsWith(".webp")
-                || path.endsWith(".svg")
+                || path.startsWith("/templates/")
                 || path.equals("/")
                 || path.equals("/favicon.ico");
+        // ⚠️ DİKKAT: .png/.js/.html gibi suffix bazlı bypassları kaldırdım.
+        // Çünkü bazen path farklı encode olunca yanlışlıkla API istekleri de bypass olabiliyor.
     }
 
     @Override
@@ -56,17 +51,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain chain)
             throws ServletException, IOException {
 
-        System.out.println("JWT FILTER path=" + req.getRequestURI());
-        System.out.println("JWT FILTER authHeader=" + req.getHeader("Authorization"));
+        String path = req.getRequestURI();
         String authHeader = req.getHeader("Authorization");
 
-        // Token yoksa devam
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // Token yoksa devam (SecurityConfig karar verir)
+        if (authHeader == null || authHeader.isBlank() || !authHeader.startsWith("Bearer ")) {
             chain.doFilter(req, res);
             return;
         }
 
-        String token = authHeader.substring(7);
+        String token = authHeader.substring(7).trim();
+
 
         try {
             String email = jwtService.parse(token).getBody().getSubject();
@@ -76,24 +71,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
+                                userDetails, null, userDetails.getAuthorities()
                         );
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                System.out.println("JWT subject(email)=" + email);
+                System.out.println("AUTH authorities=" + userDetails.getAuthorities());
+
             }
 
             chain.doFilter(req, res);
 
         } catch (Exception e) {
+            e.printStackTrace(); // <-- bunu ekle (şimdilik)
             SecurityContextHolder.clearContext();
-            chain.doFilter(req, res);
-            System.out.println("JWT FILTER EX: " + e.getClass().getName() + " " + e.getMessage());
-
+            res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token: " + e.getClass().getSimpleName());
+            return;
         }
-
 
     }
 }

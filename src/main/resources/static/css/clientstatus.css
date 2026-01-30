@@ -1,0 +1,447 @@
+/* clientstatus.css
+   - adminhome.css üstüne detaylı sayfa stilleri
+   - tema değişkenlerini adminhome.css’den alır (var(--...))
+*/
+
+:root{
+    --ring: rgba(245,158,11,0.18);
+    --ring-strong: rgba(245,158,11,0.28);
+    --soft: rgba(148,163,184,0.06);
+    --soft-2: rgba(148,163,184,0.10);
+}
+
+/* ---------- Page Head ---------- */
+
+.page-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:14px;
+}
+
+.page-head h1{
+    margin:0;
+    letter-spacing:.2px;
+}
+
+.page-head .sub{
+    margin-top:6px;
+    color: var(--muted);
+    font-size:13px;
+}
+
+/* ---------- Actions (search + refresh) ---------- */
+
+.actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.search{
+    width:min(460px, 78vw);
+    padding:11px 12px;
+    border-radius:14px;
+    border:1px solid rgba(148,163,184,0.22);
+    background: var(--input-bg);
+    color: var(--input-text);
+    outline:none;
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+body[data-theme="dark"] .search{
+    border-color: rgba(148,163,184,0.18);
+}
+
+.search::placeholder{
+    color: rgba(107,114,128,0.9);
+}
+
+body[data-theme="dark"] .search::placeholder{
+    color: rgba(156,163,175,0.85);
+}
+
+.search:focus{
+    border-color: var(--accent-line);
+    box-shadow: 0 0 0 5px var(--ring);
+}
+
+/* küçük “search icon” efekti istersen */
+.search{
+    background-image: radial-gradient(circle at 16px 50%, rgba(245,158,11,0.14), transparent 48%);
+    background-size: 0 0;
+    background-repeat:no-repeat;
+    background-position: 8px 50%;
+}
+.search:focus{
+    background-size: 28px 28px;
+}
+
+/* ---------- Chips (Hepsi/Aktif/Pasif) ---------- */
+
+.chips{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    flex-wrap:wrap;
+}
+
+.chip{
+    appearance:none;
+    border:1px solid rgba(148,163,184,0.22);
+    background: var(--soft);
+    color: var(--text);
+    padding:8px 12px;
+    border-radius:999px;
+    cursor:pointer;
+    font-weight:950;
+    font-size:12px;
+    letter-spacing:.2px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+body[data-theme="dark"] .chip{
+    border-color: rgba(148,163,184,0.18);
+}
+
+.chip:hover{
+    transform: translateY(-1px);
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+}
+
+.chip:active{
+    transform: translateY(0);
+}
+
+.chip.active{
+    border-color: var(--accent-line);
+    background: linear-gradient(180deg, rgba(245,158,11,0.16), rgba(245,158,11,0.06));
+    box-shadow: 0 8px 24px rgba(245,158,11,0.10);
+}
+
+.chip::before{
+    content:"";
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background: rgba(107,114,128,0.5);
+}
+.chip.active::before{
+    background: var(--accent);
+}
+
+/* ---------- Bulk bar ---------- */
+
+.bulkbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.bulkinfo{
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(148,163,184,0.18);
+    background: var(--soft);
+}
+
+.bulkinfo b{
+    font-weight:1000;
+    color: var(--heading);
+}
+
+/* small buttons used in table & bulk */
+.btn-mini{
+    padding:9px 12px;
+    border-radius:14px;
+    border:1px solid rgba(148,163,184,0.24);
+    background: transparent;
+    color: var(--text);
+    cursor:pointer;
+    font-weight:950;
+    letter-spacing:.15px;
+    transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+
+body[data-theme="dark"] .btn-mini{
+    border-color: rgba(148,163,184,0.18);
+}
+
+.btn-mini:hover{
+    transform: translateY(-1px);
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+    box-shadow: 0 10px 24px rgba(2,8,23,0.10);
+}
+
+body[data-theme="dark"] .btn-mini:hover{
+    box-shadow: 0 16px 30px rgba(0,0,0,0.35);
+}
+
+.btn-mini:active{
+    transform: translateY(0);
+    box-shadow:none;
+}
+
+.btn-mini:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+    transform:none;
+    box-shadow:none;
+}
+
+.btn-mini.danger:hover{
+    border-color: rgba(239,68,68,0.48);
+    background: rgba(239,68,68,0.12);
+}
+
+/* ---------- Table ---------- */
+
+.table-wrap{
+    margin-top:12px;
+    border:1px solid rgba(148,163,184,0.18);
+    border-radius:16px;
+    overflow:hidden;
+    background: rgba(148,163,184,0.04);
+}
+
+body[data-theme="dark"] .table-wrap{
+    border-color: rgba(148,163,184,0.14);
+    background: rgba(148,163,184,0.06);
+}
+
+.table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+}
+
+.table thead th{
+    position: sticky;
+    top: 0; /* table içinde sticky header */
+    z-index: 1;
+    text-align:left;
+    padding:12px 12px;
+    font-size:12px;
+    color: var(--muted);
+    background: linear-gradient(180deg, rgba(148,163,184,0.10), rgba(148,163,184,0.06));
+    border-bottom:1px solid rgba(148,163,184,0.14);
+    backdrop-filter: blur(6px);
+}
+
+body[data-theme="dark"] .table thead th{
+    background: linear-gradient(180deg, rgba(17,24,39,0.62), rgba(17,24,39,0.32));
+    border-bottom-color: rgba(148,163,184,0.12);
+}
+
+.table tbody td{
+    padding:12px 12px;
+    font-size:13px;
+    border-bottom:1px solid rgba(148,163,184,0.10);
+    vertical-align:middle;
+}
+
+.table tbody tr:last-child td{
+    border-bottom:none;
+}
+
+.table tbody tr{
+    transition: background .18s ease, transform .18s ease;
+}
+
+.table tbody tr:hover td{
+    background: rgba(245,158,11,0.07);
+}
+
+body[data-theme="dark"] .table tbody tr:hover td{
+    background: rgba(245,158,11,0.10);
+}
+
+/* first column (checkbox) align */
+.table th:first-child,
+.table td:first-child{
+    width:52px;
+}
+
+/* row actions */
+.td-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+/* ---------- Checkbox styling ---------- */
+
+#checkAll,
+.rowcheck{
+    width:16px;
+    height:16px;
+    accent-color: var(--accent);
+    cursor:pointer;
+}
+
+.rowcheck{
+    transform: translateY(1px);
+}
+
+body[data-theme="dark"] #checkAll,
+body[data-theme="dark"] .rowcheck{
+    filter: saturate(1.05);
+}
+
+/* checkbox column center-ish */
+.table td:first-child{
+    padding-left:14px;
+}
+
+/* ---------- Status badges ---------- */
+
+.badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:1000;
+    border:1px solid rgba(148,163,184,0.22);
+    background: var(--soft);
+    color: var(--text);
+    letter-spacing:.2px;
+}
+
+body[data-theme="dark"] .badge{
+    border-color: rgba(148,163,184,0.16);
+    background: rgba(148,163,184,0.06);
+}
+
+.badge .dot{
+    width:9px;
+    height:9px;
+    border-radius:999px;
+    background: rgba(107,114,128,0.55);
+    box-shadow: 0 0 0 4px rgba(107,114,128,0.12);
+}
+
+.badge.active{
+    border-color: rgba(34,197,94,0.46);
+    background: linear-gradient(180deg, rgba(34,197,94,0.14), rgba(34,197,94,0.06));
+}
+
+.badge.active .dot{
+    background: rgb(34,197,94);
+    box-shadow: 0 0 0 4px rgba(34,197,94,0.14);
+}
+
+.badge.passive{
+    border-color: rgba(239,68,68,0.46);
+    background: linear-gradient(180deg, rgba(239,68,68,0.12), rgba(239,68,68,0.06));
+}
+
+.badge.passive .dot{
+    background: rgb(239,68,68);
+    box-shadow: 0 0 0 4px rgba(239,68,68,0.14);
+}
+
+/* ---------- Empty / Loading row ---------- */
+
+.table tbody tr .muted{
+    color: var(--muted);
+}
+
+/* nicer empty cell */
+.table tbody td[colspan]{
+    padding:18px 12px;
+}
+
+/* ---------- Card header alignment tweak (clientstatus page) ---------- */
+
+.card-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.card-top h3{
+    margin:0;
+    font-weight:1000;
+    letter-spacing:.2px;
+}
+
+/* ---------- Small polish for alerts (adminhome.css’de var ama burada daha iyi görünür) ---------- */
+
+.alert{
+    border-radius:14px;
+    padding:12px 12px;
+    display:none;
+    margin-bottom:12px;
+    backdrop-filter: blur(6px);
+}
+
+.alert.ok{
+    background: rgba(34,197,94,0.10);
+    border:1px solid rgba(34,197,94,0.34);
+}
+
+.alert.err{
+    background: rgba(239,68,68,0.10);
+    border:1px solid rgba(239,68,68,0.34);
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 980px){
+    .page-head{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .actions{
+        width:100%;
+        justify-content:flex-start;
+    }
+
+    .search{
+        width:100%;
+    }
+
+    /* Table: action column wrapping */
+    .td-actions{
+        gap:6px;
+    }
+}
+.badge.deleted{
+    border-color: rgba(148,163,184,0.38);
+    background: rgba(148,163,184,0.10);
+}
+.badge.deleted .dot{
+    background: rgba(148,163,184,0.85);
+    box-shadow: 0 0 0 4px rgba(148,163,184,0.14);
+}
+
+
+@media (max-width: 720px){
+    /* Daha küçük ekranda tablo sıkışmasın diye: */
+    .table-wrap{
+        overflow:auto;
+    }
+
+    .table{
+        min-width: 820px;
+    }
+}
+
+/* ---------- Subtle “panel glow” on dark theme ---------- */
+body[data-theme="dark"] .card{
+    background:
+            radial-gradient(1200px 400px at 20% 0%, rgba(245,158,11,0.08), transparent 45%),
+            var(--panel);
+}

@@ -14,6 +14,56 @@ const CATALOG_URL = "/filejson/AutomobileWithPackeages.json";
    HELPERS
 ========================================================= */
 function $(id){ return document.getElementById(id); }
+const safeStr = (v) => (v ?? "").toString();
+
+function normalizeToken(raw){
+    if(!raw) return "";
+    let t = String(raw).trim();
+    if (t.toLowerCase().startsWith("bearer ")) t = t.slice(7).trim();
+    return t;
+}
+
+function clearAuth(){
+    localStorage.removeItem(TOKEN_KEY);
+}
+
+function redirectToLogin(){
+    clearAuth();
+    window.location.href = "/templates/Login.html";
+}
+
+async function apiFetch(pathOrUrl, { method="GET", headers={}, body=null, auth=true } = {}){
+    const url = pathOrUrl.startsWith("http") ? pathOrUrl : `${API_BASE}${pathOrUrl}`;
+
+    const h = { ...headers };
+
+    if (auth){
+        const token = normalizeToken(localStorage.getItem(TOKEN_KEY));
+        if (!token) throw new Error("Token yok. Lütfen tekrar giriş yap.");
+        h["Authorization"] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(url, { method, headers: h, body, cache:"no-store" });
+
+    const ct = res.headers.get("content-type") || "";
+    const data = ct.includes("application/json")
+        ? await res.json().catch(()=>null)
+        : await res.text().catch(()=>null);
+
+    if (!res.ok){
+        if (res.status === 401){
+            redirectToLogin();
+            return null;
+        }
+        const msg =
+            (data && (data.message || data.error || data.details)) ||
+            (typeof data === "string" ? data : "") ||
+            `HTTP ${res.status}`;
+        throw new Error(msg);
+    }
+
+    return data;
+}
 
 /* =========================================================
    DOM
@@ -49,7 +99,7 @@ let selectedFiles = []; // max 10
 function showAlert(type, msg){
     if (!alertBox) return;
     alertBox.className = "alert " + (type === "ok" ? "ok" : "err");
-    alertBox.textContent = msg;
+    alertBox.textContent = safeStr(msg);
     alertBox.style.display = "block";
 }
 function hideAlert(){
@@ -80,7 +130,7 @@ function initThemeToggle(){
    NAV
 ========================================================= */
 function logout(){
-    localStorage.removeItem(TOKEN_KEY);
+    clearAuth();
     window.location.href = "/templates/Login.html";
 }
 window.logout = logout;
@@ -91,9 +141,13 @@ function goStoreHome(){
 window.goStoreHome = goStoreHome;
 
 /* =========================================================
-   CATALOG
+   CATALOG (STABLE CASCADE)
 ========================================================= */
 let catalog = null;
+
+let selectedBrandObj = null;
+let selectedModelObj = null;
+let selectedVariantObj = null;
 
 async function loadCatalog(){
     const res = await fetch(CATALOG_URL, { cache:"no-store" });
@@ -118,28 +172,173 @@ function setOptions(select, items, placeholder){
     });
 }
 
+function setDisabled(select, disabled){
+    if (!select) return;
+    select.disabled = !!disabled;
+    select.classList.toggle("disabled", !!disabled);
+}
+
 function getBrandObj(){
     const b = brandSel.value;
     return catalog?.brands?.find(x => x.brand === b) || null;
+}
+function getModelObj(){
+    const bo = selectedBrandObj || getBrandObj();
+    const m = modelSel.value;
+    return bo?.models?.find(x => x.model === m) || null;
+}
+function getVariantObj(){
+    const mo = selectedModelObj || getModelObj();
+    const v = variantSel.value;
+    return mo?.variants?.find(x => x.variant === v) || null;
+}
+
+function resetBelowModel(){
+    setOptions(variantSel, [], "Variant (ops.)");
+    setOptions(engineSel, [], "Engine/Trim (ops.)");
+    setOptions(pkgSel, [], "Package (ops.)");
+
+    setDisabled(variantSel, true);
+    setDisabled(engineSel, true);
+    setDisabled(pkgSel, true);
+}
+
+function resetBelowVariant(){
+    setOptions(engineSel, [], "Engine/Trim (ops.)");
+    setOptions(pkgSel, [], "Package (ops.)");
+    setDisabled(engineSel, true);
+    setDisabled(pkgSel, true);
 }
 
 function refreshBrand(){
     const brands = (catalog?.brands || []).map(b => b.brand).filter(Boolean);
     setOptions(brandSel, brands, "Marka seç");
+
+    setOptions(modelSel, [], "Model seç");
+    resetBelowModel();
 }
 
 function refreshModel(){
-    const bo = getBrandObj();
-    const models = (bo?.models || []).map(m => m.model).filter(Boolean);
+    selectedBrandObj = getBrandObj();
+    selectedModelObj = null;
+    selectedVariantObj = null;
+
+    const models = (selectedBrandObj?.models || []).map(m => m.model).filter(Boolean);
     setOptions(modelSel, models, "Model seç");
+    resetBelowModel();
+}
+
+function refreshVariantEnginePackageForModel(){
+    selectedModelObj = getModelObj();
+    selectedVariantObj = null;
 
     setOptions(variantSel, [], "Variant (ops.)");
     setOptions(engineSel, [], "Engine/Trim (ops.)");
     setOptions(pkgSel, [], "Package (ops.)");
+    setDisabled(pkgSel, true);
+
+    const mo = selectedModelObj;
+    if (!mo){
+        setDisabled(variantSel, true);
+        setDisabled(engineSel, true);
+        return;
+    }
+
+    if (Array.isArray(mo.variants) && mo.variants.length > 0){
+        const vars = mo.variants.map(v => v.variant).filter(Boolean);
+        setOptions(variantSel, vars, "Variant seç");
+        setDisabled(variantSel, false);
+
+        setOptions(engineSel, [], "Engine/Trim (ops.)");
+        setDisabled(engineSel, true);
+        return;
+    }
+
+    if (Array.isArray(mo.engines) && mo.engines.length > 0){
+        setDisabled(variantSel, true);
+        setOptions(variantSel, [], "Variant (yok)");
+
+        const engines = mo.engines.map(e => e.engine).filter(Boolean);
+        setOptions(engineSel, engines, "Motor seç");
+        setDisabled(engineSel, false);
+        return;
+    }
+
+    if (Array.isArray(mo.trims) && mo.trims.length > 0){
+        setDisabled(variantSel, true);
+        setOptions(variantSel, [], "Variant (yok)");
+
+        setOptions(engineSel, mo.trims.filter(Boolean), "Trim seç");
+        setDisabled(engineSel, false);
+        return;
+    }
+
+    setDisabled(variantSel, true);
+    setDisabled(engineSel, true);
+    setDisabled(pkgSel, true);
+}
+
+function refreshEnginePackageForVariant(){
+    selectedVariantObj = getVariantObj();
+    resetBelowVariant();
+
+    const vo = selectedVariantObj;
+    if (!vo){
+        setDisabled(engineSel, true);
+        return;
+    }
+
+    if (Array.isArray(vo.engines) && vo.engines.length > 0){
+        setOptions(engineSel, vo.engines.map(e => e.engine).filter(Boolean), "Motor seç");
+        setDisabled(engineSel, false);
+        return;
+    }
+
+    if (Array.isArray(vo.trims) && vo.trims.length > 0){
+        setOptions(engineSel, vo.trims.filter(Boolean), "Trim seç");
+        setDisabled(engineSel, false);
+        return;
+    }
+
+    if (Array.isArray(vo.packages) && vo.packages.length > 0){
+        setDisabled(engineSel, true);
+        setOptions(engineSel, [], "Engine/Trim (yok)");
+
+        setOptions(pkgSel, vo.packages.filter(Boolean), "Paket seç");
+        setDisabled(pkgSel, false);
+        return;
+    }
+
+    setDisabled(engineSel, true);
+}
+
+function refreshPackageForEngine(){
+    setOptions(pkgSel, [], "Package (ops.)");
+    setDisabled(pkgSel, true);
+
+    const engineValue = engineSel.value;
+    if (!engineValue) return;
+
+    const mo = selectedModelObj || getModelObj();
+    const vo = selectedVariantObj || getVariantObj();
+
+    const engineList =
+        (vo && Array.isArray(vo.engines) ? vo.engines :
+            mo && Array.isArray(mo.engines) ? mo.engines : null);
+
+    if (!engineList) return;
+
+    const eo = engineList.find(e => e.engine === engineValue) || null;
+    const packages = eo?.packages;
+
+    if (Array.isArray(packages) && packages.length > 0){
+        setOptions(pkgSel, packages.filter(Boolean), "Paket seç");
+        setDisabled(pkgSel, false);
+    }
 }
 
 /* =========================================================
-   FILES / UPLOADER (premium)
+   FILES / UPLOADER
 ========================================================= */
 function isFull(){ return selectedFiles.length >= 10; }
 
@@ -233,7 +432,6 @@ function renderPreview(){
         item.appendChild(rm);
         item.appendChild(img);
 
-        // drag reorder
         item.addEventListener("dragstart", (e) => {
             item.classList.add("dragging");
             e.dataTransfer.setData("text/plain", String(idx));
@@ -296,7 +494,6 @@ function initUploaderUi(){
         }
     });
 
-    // drag & drop
     ["dragenter","dragover"].forEach(ev => {
         uploader.addEventListener(ev, (e) => {
             e.preventDefault();
@@ -325,7 +522,7 @@ function initUploaderUi(){
 
     imagesInp.addEventListener("change", () => {
         pushFiles(imagesInp.files);
-        imagesInp.value = ""; // aynı dosya tekrar seçilebilsin
+        imagesInp.value = "";
     });
 }
 
@@ -357,17 +554,11 @@ function initStickyCta(){
 
     const io = new IntersectionObserver((entries) => {
         const e = entries[0];
-        const hide = e.isIntersecting;      // sentinel görünüyorsa sticky kapanır
+        const hide = e.isIntersecting;
         stickyCta.classList.toggle("show", !hide);
     }, { threshold: 0.01 });
 
     io.observe(ctaSentinel);
-
-    requestAnimationFrame(() => {
-        const rect = ctaSentinel.getBoundingClientRect();
-        const visible = rect.top >= 0 && rect.top <= window.innerHeight;
-        stickyCta.classList.toggle("show", !visible);
-    });
 }
 
 /* =========================================================
@@ -434,24 +625,20 @@ function trPartName(part){
     };
     return map[part] || part;
 }
-
 function trStatusName(s){
     const map = { ORIGINAL:"Orijinal", PAINTED:"Boyalı", LOCAL_PAINT:"Lokal Boya", REPLACED:"Değişen" };
     return map[s] || s;
 }
-
 function fillColor(st){
     if (st === "REPLACED") return "#ef4444";
     if (st === "PAINTED") return "#3b82f6";
     if (st === "LOCAL_PAINT") return "#f97316";
     return null;
 }
-
 function cycleStatus(cur){
     const idx = STATUS_CYCLE.indexOf(cur);
     return STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
 }
-
 function fillPartSelect(){
     if (!partSelect) return;
     partSelect.innerHTML = "";
@@ -462,7 +649,6 @@ function fillPartSelect(){
         partSelect.appendChild(opt);
     });
 }
-
 function syncStatusSelectToCurrentPart(){
     const p = partSelect?.value;
     if (!p) return;
@@ -470,14 +656,12 @@ function syncStatusSelectToCurrentPart(){
     if (statusSelect) statusSelect.value = cur;
     if (sideInfo) sideInfo.textContent = `${trPartName(p)} → ${trStatusName(cur)}`;
 }
-
 function updateSketchHint(){
     if (!sketchHint) return;
     let paintedCount = 0;
     expertState.forEach(v => { if (v !== "ORIGINAL") paintedCount++; });
     sketchHint.textContent = paintedCount === 0 ? "Tüm parçalar orijinal" : `${paintedCount} parça işaretlendi`;
 }
-
 function applySelectedPartStatus(){
     const p = partSelect?.value;
     const st = statusSelect?.value;
@@ -493,7 +677,6 @@ function applySelectedPartStatus(){
     updateSketchHint();
     syncStatusSelectToCurrentPart();
 }
-
 function renderSketch(){
     if (!sketchOutline || !sketchParts) return;
     sketchOutline.innerHTML = "";
@@ -540,7 +723,6 @@ function renderSketch(){
         }
     });
 }
-
 function initExpert(){
     ALL_PARTS.forEach(p => expertState.set(p, "ORIGINAL"));
     if (sketchBaseImg) sketchBaseImg.src = baseUrl();
@@ -614,13 +796,34 @@ function buildDataJson(){
 /* =========================================================
    SUBMIT
 ========================================================= */
+function decodeJwtPayload(token) {
+    try {
+        const payload = token.split(".")[1];
+        const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+        return JSON.parse(atob(base64));
+    } catch {
+        return null;
+    }
+}
+
 async function submitForm(e){
     e.preventDefault();
     hideAlert();
 
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || !token.trim()){
-        window.location.href = "/templates/Login.html";
+    const token = normalizeToken(localStorage.getItem(TOKEN_KEY));
+
+    console.log("TOKEN (first 20):", (token || "").slice(0, 20));
+    const payload = decodeJwtPayload(token || "");
+    console.log("JWT payload:", payload);
+
+    if (payload?.exp) {
+        const expMs = payload.exp * 1000;
+        console.log("JWT exp (local):", new Date(expMs).toString());
+        console.log("JWT expired?:", Date.now() > expMs);
+    }
+
+    if (!token){
+        redirectToLogin();
         return;
     }
 
@@ -633,29 +836,19 @@ async function submitForm(e){
         setSubmitting(true);
 
         const fd = new FormData();
-        fd.append("data", new Blob([buildDataJson()], { type:"application/json" }));
-
+        fd.append("data", buildDataJson());
         selectedFiles.slice(0, 10).forEach(f => fd.append("images", f));
 
-        const res = await fetch(CREATE_URL, {
+        // ✅ wrapper: token otomatik
+        const body = await apiFetch(CREATE_URL, {
             method: "POST",
-            headers: { Authorization: `Bearer ${token.trim()}` },
+            auth: true,
+            // FormData gönderdiğimiz için Content-Type set ETMİYORUZ
             body: fd
         });
 
-        const ct = res.headers.get("content-type") || "";
-        const body = ct.includes("application/json")
-            ? await res.json().catch(()=>null)
-            : await res.text().catch(()=>null);
-
-        if (!res.ok){
-            const msg = (body && (body.message || body.error)) || (typeof body === "string" ? body : "") || `HTTP ${res.status}`;
-            showAlert("err", msg);
-            setSubmitting(false);
-            return;
-        }
-
         showAlert("ok", "İlan oluşturuldu. Ana Ekrana yönlendiriliyorsun...");
+        setSubmitting(false);
         setTimeout(() => goStoreHome(), 650);
 
     } catch(err){
@@ -672,9 +865,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     applyThemeFromStorage();
     initThemeToggle();
 
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || !token.trim()){
-        window.location.href = "/templates/Login.html";
+    const token = normalizeToken(localStorage.getItem(TOKEN_KEY));
+    if (!token){
+        redirectToLogin();
         return;
     }
 
@@ -683,6 +876,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         refreshBrand();
 
         brandSel.addEventListener("change", refreshModel);
+        modelSel.addEventListener("change", refreshVariantEnginePackageForModel);
+        variantSel.addEventListener("change", refreshEnginePackageForVariant);
+        engineSel.addEventListener("change", refreshPackageForEngine);
 
         if (!formEl) throw new Error("Form bulunamadı (id='form').");
         formEl.addEventListener("submit", submitForm);

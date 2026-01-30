@@ -99,7 +99,6 @@ public class StoreListingManagementController {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
-    // ✅ EKLE: ip resolver (hata buradan geliyordu)
     private String resolveClientIp(HttpServletRequest req) {
         String xff = req.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {

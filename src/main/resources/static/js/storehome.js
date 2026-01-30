@@ -26,6 +26,9 @@ const stickySearchBtn = $("stickySearch");
 const qMobile = $("qMobile");
 const searchBtnMobile = $("searchBtnMobile");
 
+/* =========================
+   HELPERS
+========================= */
 function showAlert(type, msg){
     if (!alertBox) return;
     alertBox.className = "alert " + (type === "ok" ? "ok" : "err");
@@ -62,12 +65,74 @@ async function fetchJson(url, options = {}){
         : await res.text().catch(()=>null);
 
     if (!res.ok){
-        const msg = (body && (body.message || body.error)) || (typeof body === "string" ? body : "") || `HTTP ${res.status}`;
+        const msg = (body && (body.message || body.error)) ||
+            (typeof body === "string" ? body : "") ||
+            `HTTP ${res.status}`;
         throw new Error(msg);
     }
     return body;
 }
 
+function money(v, currency){
+    if (v == null) return "—";
+    try {
+        return new Intl.NumberFormat("tr-TR", { style:"currency", currency: currency || "TRY" }).format(Number(v));
+    } catch {
+        return `${v} ${currency || ""}`.trim();
+    }
+}
+function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+}
+
+/* ✅ img url normalizer (KAPAK FOTO FIX) */
+function normalizeImgUrl(p){
+    if (!p) return "/imagesforapp/logo2.png";
+
+    const s = String(p).trim();
+    if (!s) return "/imagesforapp/logo2.png";
+
+    // tam url ise dokunma
+    if (s.startsWith("http://") || s.startsWith("https://")) return s;
+
+    // /uploads/... ise API_BASE ile tamamla (cross-origin için garanti)
+    if (s.startsWith("/uploads/")) return API_BASE + s;
+
+    // uploads/... (başında slash yoksa)
+    if (s.startsWith("uploads/")) return API_BASE + "/" + s;
+
+    // diğer relative pathler (static içindekiler)
+    if (s.startsWith("/")) return s;
+    return "/" + s;
+}
+
+/* NAV */
+function logout(){
+    localStorage.removeItem(TOKEN_KEY);
+    window.location.href = "/templates/Login.html";
+}
+window.logout = logout;
+
+function goStoreHome(){ window.location.href = "/templates/storehome.html"; }
+window.goStoreHome = goStoreHome;
+
+function goCreateListing(){ window.location.href = "/templates/storecreateListing.html"; }
+window.goCreateListing = goCreateListing;
+
+function goNotifications(){ window.location.href = "/templates/storenotifications.html"; }
+window.goNotifications = goNotifications;
+
+function goInbox(){ window.location.href = "/templates/storeinbox.html"; }
+window.goInbox = goInbox;
+
+function goStoreProfile(){ window.location.href = "/templates/storeprofile.html"; }
+window.goStoreProfile = goStoreProfile;
+
+/* =========================
+   UNREAD COUNTS
+========================= */
 async function loadUnreadCount(){
     const badge = $("notifBadge");
     if (!badge) return;
@@ -118,62 +183,20 @@ async function loadInboxUnreadCount(){
     }
 }
 
-function money(v, currency){
-    if (v == null) return "—";
-    try {
-        return new Intl.NumberFormat("tr-TR", { style:"currency", currency: currency || "TRY" }).format(Number(v));
-    } catch {
-        return `${v} ${currency || ""}`.trim();
-    }
-}
-function escapeHtml(s){
-    return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[m]));
-}
-
-/* NAV */
-function logout(){
-    localStorage.removeItem(TOKEN_KEY);
-    window.location.href = "/templates/Login.html";
-}
-window.logout = logout;
-
-function goStoreHome(){ window.location.href = "/templates/storehome.html"; }
-window.goStoreHome = goStoreHome;
-
-function goCreateListing(){ window.location.href = "/templates/storecreateListing.html"; }
-window.goCreateListing = goCreateListing;
-
-function goNotifications(){ window.location.href = "/templates/storenotifications.html"; }
-window.goNotifications = goNotifications;
-
-function goInbox(){ window.location.href = "/templates/storeinbox.html"; }
-window.goInbox = goInbox;
-
-function goStoreProfile(){ window.location.href = "/templates/storeprofile.html"; }
-window.goStoreProfile = goStoreProfile;
-
-/* ✅ STATUS -> pill */
-function statusToPill(statusRaw){
-    const s = String(statusRaw || "").toUpperCase();
-
-    // örnek mapping: backend’ine göre çoğaltabilirsin
-    if (["ACTIVE","PUBLISHED","APPROVED"].includes(s)) return { text:"AKTİF", cls:"status-active", title:"Yayında" };
-    if (["PENDING","WAITING","IN_REVIEW"].includes(s)) return { text:"ASKIDA", cls:"status-pending", title:"İncelemede" };
-    if (["SOLD","COMPLETED"].includes(s)) return { text:"SATILDI", cls:"status-sold", title:"Satıldı" };
-    if (["PAUSED","HIDDEN","PASSIVE","INACTIVE"].includes(s)) return { text:"PASİF", cls:"status-paused", title:"Yayında değil" };
-
-    return { text: s ? s : "—", cls:"status-paused", title:"Durum" };
-}
+/* =========================
+   ROW RENDER
+========================= */
 function rowHtml(item){
-    const img = item.coverImageUrl || "/imagesforapp/logo2.png";
+    const img = normalizeImgUrl(item.coverImageUrl);
     const status = item.status || "—";
     const price = money(item.price, item.currency);
 
     return `
     <div class="row" data-id="${item.id}">
-      <div class="cover"><img src="${escapeHtml(img)}" alt="car"></div>
+      <div class="cover">
+        <img src="${escapeHtml(img)}" alt="car"
+             onerror="this.onerror=null;this.src='/imagesforapp/logo2.png';">
+      </div>
 
       <div class="desc">
         <div class="t">${escapeHtml(item.title || "İlan")}</div>
@@ -184,26 +207,20 @@ function rowHtml(item){
       </div>
 
       <div class="row-actions">
-        <!-- Desktop -->
         <div class="btn-group">
           <button class="btn primary" data-act="update" data-id="${item.id}">update</button>
           <button class="btn danger" data-act="delete" data-id="${item.id}">delete</button>
         </div>
 
-        <!-- Mobile -->
         <button class="kebab" type="button" aria-label="İşlemler" data-act="sheet" data-id="${item.id}">⋯</button>
       </div>
     </div>
   `;
 }
 
-function closeAllMenus(exceptMenuEl){
-    if (!listEl) return;
-    listEl.querySelectorAll(".kebab-menu").forEach(m => {
-        if (exceptMenuEl && m === exceptMenuEl) return;
-        m.hidden = true;
-    });
-}
+/* =========================
+   ACTION SHEET
+========================= */
 let sheetEl = null;
 let sheetListingId = null;
 
@@ -214,41 +231,39 @@ function ensureSheet(){
     div.className = "sheet";
     div.id = "actionSheet";
     div.innerHTML = `
-      <div class="sheet-backdrop" data-sheet-close="1"></div>
-      <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="İşlemler">
-        <div class="sheet-grab"></div>
+    <div class="sheet-backdrop" data-sheet-close="1"></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="İşlemler">
+      <div class="sheet-grab"></div>
 
-        <div class="sheet-head">
-          <div>
-            <div class="sheet-title" id="sheetTitle">İlan işlemleri</div>
-            <div class="sheet-sub" id="sheetSub">Seçili ilan</div>
-          </div>
-          <button class="sheet-x" type="button" aria-label="Kapat" data-sheet-close="1">×</button>
+      <div class="sheet-head">
+        <div>
+          <div class="sheet-title" id="sheetTitle">İlan işlemleri</div>
+          <div class="sheet-sub" id="sheetSub">Seçili ilan</div>
         </div>
-
-        <div class="sheet-actions">
-          <button class="sheet-btn" type="button" data-sheet-act="update">
-            Düzenle <span>✎</span>
-          </button>
-          <button class="sheet-btn danger" type="button" data-sheet-act="delete">
-            Sil <span>🗑</span>
-          </button>
-          <button class="sheet-btn" type="button" data-sheet-close="1">
-            Vazgeç <span>⟲</span>
-          </button>
-        </div>
+        <button class="sheet-x" type="button" aria-label="Kapat" data-sheet-close="1">×</button>
       </div>
-    `;
+
+      <div class="sheet-actions">
+        <button class="sheet-btn" type="button" data-sheet-act="update">
+          Düzenle <span>✎</span>
+        </button>
+        <button class="sheet-btn danger" type="button" data-sheet-act="delete">
+          Sil <span>🗑</span>
+        </button>
+        <button class="sheet-btn" type="button" data-sheet-close="1">
+          Vazgeç <span>⟲</span>
+        </button>
+      </div>
+    </div>
+  `;
     document.body.appendChild(div);
     sheetEl = div;
 
-    // close handlers
     sheetEl.addEventListener("click", (e) => {
         const close = e.target.closest("[data-sheet-close]");
         if (close) closeSheet();
     });
 
-    // action handlers
     sheetEl.addEventListener("click", async (e) => {
         const actBtn = e.target.closest("[data-sheet-act]");
         if (!actBtn) return;
@@ -282,7 +297,6 @@ function ensureSheet(){
         }
     });
 
-    // esc to close
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape" && sheetEl?.classList.contains("show")) closeSheet();
     });
@@ -300,16 +314,15 @@ function openSheet({ id, title, sub }){
     if (s) s.textContent = sub || `İlan #${id}`;
 
     sheetEl.classList.add("show");
-    document.body.style.overflow = "hidden"; // arkayı kilitle
+    document.body.style.overflow = "hidden";
 }
 
 function closeSheet(){
     if (!sheetEl) return;
     sheetEl.classList.remove("show");
-    document.body.style.overflow = ""; // kilidi kaldır
+    document.body.style.overflow = "";
     sheetListingId = null;
 }
-
 
 function bindRowActions(){
     listEl?.addEventListener("click", async (e) => {
@@ -320,9 +333,7 @@ function bindRowActions(){
         const id = Number(btn.dataset.id);
         if (!Number.isFinite(id)) return;
 
-        // ✅ Mobile sheet
         if (act === "sheet"){
-            // row içinden başlık çek
             const row = btn.closest(".row");
             const title = row?.querySelector(".desc .t")?.textContent?.trim() || "İlan";
             const sub = row?.querySelector(".desc .s")?.textContent?.trim() || `İlan #${id}`;
@@ -330,7 +341,6 @@ function bindRowActions(){
             return;
         }
 
-        // ✅ Desktop actions
         if (act === "update"){
             window.location.href = `/templates/storelistingedit.html?id=${encodeURIComponent(id)}`;
             return;
@@ -355,8 +365,9 @@ function bindRowActions(){
     });
 }
 
-
-
+/* =========================
+   HOME LOAD
+========================= */
 async function loadHome(q){
     hideAlert();
     const token = localStorage.getItem(TOKEN_KEY);
@@ -435,6 +446,9 @@ function initSearchModal(){
     });
 }
 
+/* =========================
+   INIT
+========================= */
 document.addEventListener("DOMContentLoaded", async () => {
     applyThemeFromStorage();
     initThemeToggle();
@@ -458,7 +472,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         await loadHome("");
     } catch (e) {
-        showAlert("err", e.message || "An sayfa yüklenemedi.");
+        showAlert("err", e.message || "Ana sayfa yüklenemedi.");
     }
 
     await loadUnreadCount().catch(()=>{});

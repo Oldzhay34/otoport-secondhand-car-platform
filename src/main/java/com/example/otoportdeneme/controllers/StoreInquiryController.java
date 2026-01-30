@@ -12,7 +12,6 @@ import com.example.otoportdeneme.repositories.InquiryMessageRepository;
 import com.example.otoportdeneme.repositories.InquiryRepository;
 import com.example.otoportdeneme.repositories.StoreRepository;
 import com.example.otoportdeneme.services.InquiryMessageService;
-import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,19 +37,19 @@ public class StoreInquiryController {
         this.inquiryMessageService = inquiryMessageService;
     }
 
-    // ✅ inbox list
     @GetMapping
     public StoreInquiryListResponse list(Authentication auth,
                                          @RequestParam(value = "q", required = false) String q) {
+
         Long storeId = resolveStoreId(auth);
 
-        List<Inquiry> inquiries = inquiryRepository.findByStoreIdOrderByCreatedAtDesc(storeId);
+        // ✅ LAZY FIX: listing + client fetch
+        List<Inquiry> inquiries = inquiryRepository.findByStoreIdFetchListingClient(storeId);
 
-        // Basit arama (listing title / guest / client email) - DTO mapping sırasında filtreleyelim
         String needle = (q == null) ? null : q.trim().toLowerCase();
 
         List<InquiryThreadItemDto> items = inquiries.stream()
-                .map(inq -> toThreadItemDto(inq))
+                .map(this::toThreadItemDto) // artık listing title güvenli
                 .filter(dto -> {
                     if (needle == null || needle.isEmpty()) return true;
                     return (dto.getListingTitle() != null && dto.getListingTitle().toLowerCase().contains(needle))
@@ -59,7 +58,6 @@ public class StoreInquiryController {
                             || (dto.getGuestName() != null && dto.getGuestName().toLowerCase().contains(needle))
                             || (dto.getGuestEmail() != null && dto.getGuestEmail().toLowerCase().contains(needle));
                 })
-                // son mesaja göre sırala (yoksa createdAt)
                 .sorted(Comparator.comparing(InquiryThreadItemDto::getLastSentAt,
                         Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .toList();
@@ -67,12 +65,12 @@ public class StoreInquiryController {
         return new StoreInquiryListResponse(items);
     }
 
-    // ✅ thread detail
     @GetMapping("/{inquiryId}")
     public StoreInquiryThreadResponse get(Authentication auth, @PathVariable Long inquiryId) {
+
         Long storeId = resolveStoreId(auth);
 
-        Inquiry inq = inquiryRepository.findById(inquiryId)
+        Inquiry inq = inquiryRepository.findByIdFetchListingClient(inquiryId)
                 .orElseThrow(() -> new IllegalArgumentException("Inquiry not found"));
 
         if (!inq.getStore().getId().equals(storeId)) {
@@ -85,14 +83,11 @@ public class StoreInquiryController {
         res.setInquiryId(inq.getId());
         res.setListingId(inq.getListing() != null ? inq.getListing().getId() : null);
         res.setListingTitle(inq.getListing() != null ? inq.getListing().getTitle() : "İlan");
-
         res.setStatus(inq.getStatus() != null ? inq.getStatus().name() : null);
         res.setCreatedAt(inq.getCreatedAt());
 
         if (inq.getClient() != null) {
-            // projendeki Client alanlarına göre uyarlayabilirsin
             res.setClientEmail(inq.getClient().getEmail());
-            // res.setClientName(inq.getClient().getFullName());
         } else {
             res.setGuestName(inq.getGuestName());
             res.setGuestEmail(inq.getGuestEmail());
@@ -112,7 +107,6 @@ public class StoreInquiryController {
         return res;
     }
 
-    // ✅ store reply
     @PostMapping("/{inquiryId}/reply")
     public void reply(Authentication auth,
                       @PathVariable Long inquiryId,
@@ -127,18 +121,12 @@ public class StoreInquiryController {
             throw new IllegalArgumentException("message is required");
         }
 
-        inquiryMessageService.replyAsStore(
-                inquiryId,
-                storeId,
-                msg.trim(),
-                ip,
-                ua
-        );
+        inquiryMessageService.replyAsStore(inquiryId, storeId, msg.trim(), ip, ua);
     }
 
-    // ✅ thread açılınca okundu
     @PatchMapping("/{inquiryId}/read")
     public void markRead(Authentication auth, @PathVariable Long inquiryId) {
+
         Long storeId = resolveStoreId(auth);
 
         Inquiry inq = inquiryRepository.findById(inquiryId)
@@ -151,24 +139,18 @@ public class StoreInquiryController {
         inquiryMessageService.markReadByStore(inquiryId);
     }
 
-    // ✅ home badge: toplam unread inquiry mesaj sayısı
     @GetMapping("/unread-count")
     public UnreadCountResponse unreadCount(Authentication auth) {
         Long storeId = resolveStoreId(auth);
 
-        // store'a ait inquiry'lerin id listesi
-        List<Inquiry> inquiries = inquiryRepository.findByStoreIdOrderByCreatedAtDesc(storeId);
+        List<Inquiry> inquiries = inquiryRepository.findByStoreIdFetchListingClient(storeId);
 
         long total = 0;
         for (Inquiry inq : inquiries) {
-            // store'un okumadığı mesaj sayısı (bu inquiry'de)
-            total += messageRepository.countByInquiryIdAndReadByStoreFalse(inq.getId());
+            total += messageRepository.countUnreadForStore(inq.getId());
         }
-
         return new UnreadCountResponse(total);
     }
-
-    // ---- helpers ----
 
     private InquiryThreadItemDto toThreadItemDto(Inquiry inq) {
         InquiryThreadItemDto d = new InquiryThreadItemDto();
@@ -186,18 +168,15 @@ public class StoreInquiryController {
 
         if (inq.getClient() != null) {
             d.setClientEmail(inq.getClient().getEmail());
-            // d.setClientName(inq.getClient().getFullName());
         } else {
             d.setGuestName(inq.getGuestName());
             d.setGuestEmail(inq.getGuestEmail());
             d.setGuestPhone(inq.getGuestPhone());
         }
 
-        // unread sayısı
-        long unread = messageRepository.countByInquiryIdAndReadByStoreFalse(inq.getId());
+        long unread = messageRepository.countUnreadForStore(inq.getId());
         d.setUnreadCount(unread);
 
-        // last message (aktif mesaj tablosundan)
         List<InquiryMessage> msgs = messageRepository.findByInquiryIdOrderBySentAtAsc(inq.getId());
         if (!msgs.isEmpty()) {
             InquiryMessage last = msgs.get(msgs.size() - 1);

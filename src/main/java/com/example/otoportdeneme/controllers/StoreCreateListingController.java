@@ -10,11 +10,14 @@ import com.example.otoportdeneme.models.Listing;
 import com.example.otoportdeneme.repositories.StoreRepository;
 import com.example.otoportdeneme.services.AuditService;
 import com.example.otoportdeneme.services.StoreCreateListingService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Locale;
@@ -26,27 +29,32 @@ public class StoreCreateListingController {
     private final StoreCreateListingService service;
     private final StoreRepository storeRepository;
     private final AuditService auditService;
+    private final ObjectMapper objectMapper;
 
     public StoreCreateListingController(StoreCreateListingService service,
                                         StoreRepository storeRepository,
-                                        AuditService auditService) {
+                                        AuditService auditService,
+                                        ObjectMapper objectMapper) {
         this.service = service;
         this.storeRepository = storeRepository;
         this.auditService = auditService;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public StoreListingCreateResponse create(
             Authentication auth,
-            @RequestPart("data") StoreListingCreateRequest req,
+            @RequestPart("data") String dataJson,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             HttpServletRequest httpReq
-    ) {
-        Long storeId = resolveStoreId(auth);
+    ) throws Exception {
 
+        StoreListingCreateRequest req =
+                objectMapper.readValue(dataJson, StoreListingCreateRequest.class);
+
+        Long storeId = resolveStoreId(auth);
         Listing created = service.createMyListing(storeId, req, images);
 
-        // ✅ AUDIT
         auditService.log(
                 ActorType.STORE, storeId,
                 AuditAction.CREATE,
@@ -61,10 +69,10 @@ public class StoreCreateListingController {
     }
 
     private Long resolveStoreId(Authentication auth) {
-        if (auth == null) throw new IllegalArgumentException("Unauthorized");
+        if (auth == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         String email = auth.getName();
         return storeRepository.findIdByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Store not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Store not found"));
     }
 
     private String resolveClientIp(HttpServletRequest req) {

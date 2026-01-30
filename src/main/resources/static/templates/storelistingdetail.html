@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Otoport - Store Listing Detail</title>
+    <link rel="stylesheet" href="/css/storelistingdetail.css" />
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo" onclick="goStoreHome()" role="button" tabindex="0">
+        <span>OTO<strong>PORT</strong></span>
+    </div>
+
+    <div class="search-box" aria-hidden="true">
+        <input type="text" placeholder="Arama motoru (pasif)" disabled />
+        <button type="button" disabled>Ara</button>
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline">
+            <span>Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost" type="button" onclick="goStoreInbox()">inbox</button>
+        <button class="ghost" type="button" onclick="goCreateListing()">ilan ver</button>
+        <button class="ghost" type="button" onclick="goNotifications()">bildirimler</button>
+        <button class="ghost" type="button" onclick="goStoreProfile()">profile store</button>
+        <button class="ghost" type="button" onclick="logout()">logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+
+    <div id="alert" class="alert" style="display:none;"></div>
+
+    <section class="panel">
+
+        <!-- TOP BAR: Store card + stats -->
+        <div class="bar">
+            <div class="bar-left">
+                <div id="storeBox" class="store-box" title="Mağaza">
+                    <div class="store-avatar" id="storeAvatar"></div>
+                    <div class="store-text">
+                        <div id="storeName" class="store-name">Mağaza adı</div>
+                        <div id="storeLoc" class="store-loc">Şehir • İlçe</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bar-right">
+                <div class="stats" aria-label="İstatistikler">
+          <span class="stat" title="Toplam favori">
+            <span class="stat-ico">❤</span>
+            <b id="favTotal">0</b>
+          </span>
+                    <span class="stat" title="Toplam görüntülenme">
+            <span class="stat-ico">👁</span>
+            <b id="viewTotal">0</b>
+          </span>
+                </div>
+
+                <div class="badge-soft" id="statusBadge">—</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- LEFT: GALLERY -->
+            <div class="gallery">
+                <button class="nav left" id="prevBtn" type="button" aria-label="Önceki">‹</button>
+
+                <div class="main-img">
+                    <img id="mainImg" alt="main" />
+                </div>
+
+                <button class="nav right" id="nextBtn" type="button" aria-label="Sonraki">›</button>
+
+                <div id="thumbs" class="thumbs"></div>
+            </div>
+
+            <!-- RIGHT: INFO -->
+            <aside class="info">
+                <h2 id="title" class="title">İlan başlığı</h2>
+
+                <div class="price-row">
+                    <div id="price" class="price">—</div>
+                    <div class="pill" id="metaPill">—</div>
+                </div>
+
+                <div class="kv" id="kv"></div>
+
+                <div class="desc">
+                    <div class="desc-title">Açıklama</div>
+                    <div id="descText" class="desc-text">—</div>
+                </div>
+
+                <div class="store-phone">
+                    <div class="phone-label">Mağaza telefon</div>
+                    <a id="storePhone" class="phone" href="#">—</a>
+                </div>
+            </aside>
+        </div>
+
+        <!-- ✅ KROKİ -->
+        <section class="car-sketch" id="carSketchPanel">
+            <div class="sketch-head">
+                <h3>Kroki</h3>
+                <div class="muted tiny" id="sketchHint">—</div>
+            </div>
+
+            <div class="sketch-stage">
+                <img class="sketch-layer" id="sketchBase" alt="Ekspertiz Kroki" />
+                <div class="sketch-outline" id="sketchOutline"></div>
+                <div class="sketch-parts" id="sketchParts"></div>
+            </div>
+
+            <div class="sketch-legend">
+                <span class="lg"><i class="dot red"></i> Değişen</span>
+                <span class="lg"><i class="dot blue"></i> Boyalı</span>
+                <span class="lg"><i class="dot orange"></i> Lokal Boya</span>
+            </div>
+        </section>
+
+        <!-- ✅ Expert (tek panel) -->
+        <div class="below-grid single">
+            <section class="expert-panel" id="expertPanel">
+                <div class="expert-head">
+                    <h3>Expertiz Raporu</h3>
+                    <span class="badge" id="expertResultBadge" style="display:none;"></span>
+                </div>
+
+                <div class="expert-meta" id="expertMeta">—</div>
+                <div class="expert-notes" id="expertNotes" style="display:none;"></div>
+
+                <div class="expert-table-wrap">
+                    <table class="expert-table" id="expertTable" style="display:none;">
+                        <thead>
+                        <tr>
+                            <th>Parça</th>
+                            <th>Durum</th>
+                            <th>Not</th>
+                        </tr>
+                        </thead>
+                        <tbody id="expertTbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="muted tiny" id="expertHint">—</div>
+            </section>
+        </div>
+
+    </section>
+</main>
+
+<footer class="footer">© Otoport</footer>
+
+<script src="/js/storelistingdetail.js"></script>
+</body>
+</html>

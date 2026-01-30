@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpecificationExecutor<Listing> {
 
@@ -132,6 +134,23 @@ public interface ListingRepository extends JpaRepository<Listing, Long>, JpaSpec
     @Modifying
     @Query("update Listing l set l.viewCount = l.viewCount + 1 where l.id = :id")
     void incrementViewCount(@Param("id") Long id);
+
+    @Query("""
+    select distinct l
+    from Listing l
+    join fetch l.store s
+    left join fetch l.car c
+    left join fetch c.trim t
+    left join fetch t.model m
+    left join fetch m.brand b
+    left join fetch l.images imgs
+    where l.id = :listingId
+""")
+    Optional<Listing> findStoreDetailByIdFetchAll(@Param("listingId") Long listingId);
+
+    long countByStoreIdAndCreatedAtBetween(Long storeId, Instant start, Instant end);
+
+
 }
 
 // concurrent sağlam lost update ve temporary update problemleri engelleri çıkmaz artık

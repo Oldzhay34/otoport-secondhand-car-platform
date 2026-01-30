@@ -18,6 +18,20 @@
             <input id="themeToggle" type="checkbox" />
             <span>Dark</span>
         </label>
+
+        <button class="ghost" type="button" onclick="window.location.href='/templates/storesubscription.html'">
+            Store Paketleri
+        </button>
+
+
+        <!-- ✅ WAL (btn ghost) -->
+
+        <button class="ghost" type="button" onclick="window.location.href='/templates/clientstatus.html'">
+            Kullanıcı Durumları
+        </button>
+
+        <button class="btn ghost" type="button" onclick="goWal()">WAL</button>
+
         <button class="ghost" type="button" onclick="goAuditLogs()">audit logları</button>
 
         <button id="createNotifBtn" class="btn ghost">Notification Oluştur</button>
@@ -48,7 +62,22 @@
             <div class="label">Mağaza</div>
             <div class="value" id="statStore">—</div>
         </div>
+        <div class="card span2">
+            <div class="card-top">
+                <div>
+                    <h3>Spam/Küfür Denemeleri (Bugün)</h3>
+                    <div class="muted tiny">Mesaj engellenen kullanıcılar</div>
+                </div>
+                <div class="value" id="statSpamAttempts">—</div>
+            </div>
+
+            <div class="rows" id="spamActors">
+                <div class="tiny muted">—</div>
+            </div>
+        </div>
+
     </section>
+
 
     <section class="wide">
         <div class="wide-left">
@@ -63,13 +92,11 @@
         </div>
     </section>
 
-    <!-- DEBUG / ERROR AREA -->
     <div id="adminErr" class="errbox"></div>
 
     <footer class="foot">© Otoport</footer>
 </main>
 
-<!-- ÖNEMLİ: defer -->
 <script src="/js/adminhome.js" defer></script>
 </body>
 </html>

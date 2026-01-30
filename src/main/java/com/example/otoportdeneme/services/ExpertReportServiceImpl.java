@@ -8,13 +8,14 @@ import com.example.otoportdeneme.models.ExpertReport;
 import com.example.otoportdeneme.repositories.CarRepository;
 import com.example.otoportdeneme.repositories.ExpertItemRepository;
 import com.example.otoportdeneme.repositories.ExpertReportRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ExpertReportServiceImpl implements ExpertReportService {
@@ -23,9 +24,14 @@ public class ExpertReportServiceImpl implements ExpertReportService {
     private final ExpertItemRepository expertItemRepository;
     private final CarRepository carRepository;
 
-    public ExpertReportServiceImpl(ExpertReportRepository expertReportRepository,
-                                   ExpertItemRepository expertItemRepository,
-                                   CarRepository carRepository) {
+    @PersistenceContext
+    private EntityManager em;
+
+    public ExpertReportServiceImpl(
+            ExpertReportRepository expertReportRepository,
+            ExpertItemRepository expertItemRepository,
+            CarRepository carRepository
+    ) {
         this.expertReportRepository = expertReportRepository;
         this.expertItemRepository = expertItemRepository;
         this.carRepository = carRepository;
@@ -35,30 +41,23 @@ public class ExpertReportServiceImpl implements ExpertReportService {
     public ExpertReportDto getByCarId(Long carId) {
         var opt = expertReportRepository.findByCar_Id(carId);
 
-        // ✅ RAPOR YOKSA: default rapor (tüm parçalar ORIGINAL)
         if (opt.isEmpty()) {
             ExpertReportDto dto = new ExpertReportDto();
-            dto.setId(null);
             dto.setCarId(carId);
-            dto.setCompanyName(null);
-            dto.setReportDate(null);
-            dto.setReportNo(null);
             dto.setResult(com.example.otoportdeneme.Enums.ExpertResult.UNKNOWN);
-            dto.setNotes(null);
 
-            java.util.List<ExpertItemDto> items = new java.util.ArrayList<>();
-            for (com.example.otoportdeneme.Enums.CarPart p : com.example.otoportdeneme.Enums.CarPart.values()) {
+            var items = new java.util.ArrayList<ExpertItemDto>();
+            for (var p : com.example.otoportdeneme.Enums.CarPart.values()) {
                 items.add(new ExpertItemDto(
                         p,
                         com.example.otoportdeneme.Enums.PartStatus.ORIGINAL,
-                        "Varsayılan: mağaza expertiz girmedi"
+                        "Varsayılan"
                 ));
             }
             dto.setItems(items);
             return dto;
         }
 
-        // ✅ RAPOR VARSA: normal map
         ExpertReport report = opt.get();
 
         ExpertReportDto dto = new ExpertReportDto();
@@ -73,25 +72,8 @@ public class ExpertReportServiceImpl implements ExpertReportService {
         dto.setItems(
                 expertItemRepository.findByReportId(report.getId()).stream()
                         .map(i -> new ExpertItemDto(i.getPart(), i.getStatus(), i.getNote()))
-                        .collect(java.util.stream.Collectors.toList())
+                        .toList()
         );
-
-
-        java.util.Set<com.example.otoportdeneme.Enums.CarPart> existing =
-                dto.getItems().stream().map(ExpertItemDto::getPart).collect(java.util.stream.Collectors.toSet());
-
-        for (com.example.otoportdeneme.Enums.CarPart p : com.example.otoportdeneme.Enums.CarPart.values()) {
-            if (!existing.contains(p)) {
-                dto.getItems().add(new ExpertItemDto(
-                        p,
-                        com.example.otoportdeneme.Enums.PartStatus.ORIGINAL,
-                        "Varsayılan: parça kaydı girilmedi"
-                ));
-            }
-        }
-
-        // İstersen UI'da sabit sıralı görünsün diye:
-        dto.getItems().sort(java.util.Comparator.comparing(a -> a.getPart().name()));
 
         return dto;
     }
@@ -99,44 +81,64 @@ public class ExpertReportServiceImpl implements ExpertReportService {
     @Override
     @Transactional
     public ExpertReportDto upsertByCarId(Long carId, ExpertReportDto dto) {
-        if (carId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "carId required");
 
-        Car car = carRepository.findById(carId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Car not found"));
+        if (carId == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "carId required");
 
-        ExpertReport report = expertReportRepository.findByCar_Id(carId)
+        ExpertReport report = expertReportRepository.findByCarIdForUpdate(carId)
                 .orElseGet(() -> {
+                    Car car = carRepository.findById(carId)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Car not found"));
+
                     ExpertReport r = new ExpertReport();
                     r.setCar(car);
-                    return r;
+                    return expertReportRepository.saveAndFlush(r); // ⬅️ persist
                 });
 
         report.setCompanyName(dto.getCompanyName());
         report.setReportDate(dto.getReportDate());
         report.setReportNo(dto.getReportNo());
-        report.setResult(dto.getResult() == null ? com.example.otoportdeneme.Enums.ExpertResult.UNKNOWN : dto.getResult());
+        report.setResult(
+                dto.getResult() == null
+                        ? com.example.otoportdeneme.Enums.ExpertResult.UNKNOWN
+                        : dto.getResult()
+        );
         report.setNotes(dto.getNotes());
 
-        // ✅ items: orphanRemoval ile temizle-yeniden ekle
-        report.getItems().clear();
+        // =========================
+        // 🔥 PART BAZLI UPSERT
+        // =========================
+        List<ExpertItem> existingItems =
+                expertItemRepository.findByReportId(report.getId());
 
-        List<ExpertItemDto> items = (dto.getItems() == null) ? List.of() : dto.getItems();
-        for (ExpertItemDto it : items) {
+        var byPart = existingItems.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        ExpertItem::getPart,
+                        i -> i
+                ));
+
+        List<ExpertItemDto> incoming =
+                dto.getItems() == null ? List.of() : dto.getItems();
+
+        for (ExpertItemDto it : incoming) {
             if (it == null || it.getPart() == null || it.getStatus() == null) continue;
-            ExpertItem ei = new ExpertItem();
-            ei.setPart(it.getPart());
+
+            ExpertItem ei = byPart.get(it.getPart());
+
+            if (ei == null) {
+
+                ei = new ExpertItem();
+                ei.setReport(report);
+                ei.setPart(it.getPart());
+            }
+
             ei.setStatus(it.getStatus());
             ei.setNote(it.getNote());
-            report.addItem(ei); // ✅ setReport + listeye ekler
-        }
 
-        expertReportRepository.save(report);
+            expertItemRepository.save(ei);
+        }
 
         return getByCarId(carId);
     }
 
-
-
 }
-
-

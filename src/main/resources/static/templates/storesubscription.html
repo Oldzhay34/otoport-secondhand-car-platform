@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin • Store Paketleri</title>
+    <link rel="stylesheet" href="/css/storesubscription.css" />
+</head>
+
+<body data-theme="dark">
+<header class="topbar">
+    <div class="logo" role="button" tabindex="0" onclick="goAdminHome()">
+        OTO<strong>PORT</strong> • Admin
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline">
+            <span>Light</span>
+            <label class="switch" aria-label="Tema seç">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost" type="button" onclick="goAdminHome()">Home</button>
+        <button id="logoutBtn" class="ghost" type="button">logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <section class="panel">
+        <div id="alert" class="alert"></div>
+
+        <div class="bar">
+            <div>
+                <div class="h-title">Mağaza Paket Yönetimi</div>
+                <div class="muted tiny">Paket seç → Kaydet. (BASIC/PLUS/PRO)</div>
+            </div>
+
+            <div class="bar-right">
+                <input id="q" class="inp" placeholder="Ara: mağaza / şehir / ilçe" />
+                <button id="refreshBtn" class="apply" type="button">Yenile</button>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="tbl">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Mağaza</th>
+                    <th>Konum</th>
+                    <th>Paket</th>
+                    <th>Aylık Limit</th>
+                    <th>Featured</th>
+                    <th>Durum</th>
+                    <th>İşlem</th>
+                </tr>
+                </thead>
+                <tbody id="rows"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer class="footer">© Otoport</footer>
+</main>
+
+<script src="/js/storesubscription.js" defer></script>
+</body>
+</html>

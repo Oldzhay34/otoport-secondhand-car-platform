@@ -76,12 +76,20 @@ function pickStoreCity(store) {
     return store?.city || store?.location || "";
 }
 
+function toPublicImg(u){
+    if(!u) return u;
+    if (u.startsWith("http") || u.startsWith("/")) return u;
+    return "/uploads/" + u; // sadece dosya adıysa
+}
+
 function pickCover(listing) {
-    return listing?.coverImageUrl
+    const raw = listing?.coverImageUrl
         || listing?.cover
         || listing?.imageUrl
         || listing?.image
         || "/imagesforapp/logo2.png";
+
+    return toPublicImg(raw);
 }
 
 // --------------------

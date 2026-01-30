@@ -4,10 +4,8 @@ import com.example.otoportdeneme.Enums.AuditAction;
 import com.example.otoportdeneme.dto_Response.AdminDailyStatsDto;
 import com.example.otoportdeneme.dto_Response.HourlyPointDto;
 import com.example.otoportdeneme.dto_Response.StoreActivityDto;
-import com.example.otoportdeneme.repositories.AuditLogRepository;
-import com.example.otoportdeneme.repositories.GuestAccessLogRepository;
-import com.example.otoportdeneme.repositories.InquiryMessageRepository;
-import com.example.otoportdeneme.repositories.InquiryRepository;
+import com.example.otoportdeneme.dto_Objects.admin.SpamAttemptActorDto;
+import com.example.otoportdeneme.repositories.*;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
@@ -20,15 +18,19 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
     private final AuditLogRepository auditRepo;
     private final InquiryRepository inquiryRepo;
     private final InquiryMessageRepository msgRepo;
+    private final MessageModerationAttemptRepository attemptRepo; // ✅
 
     public AdminAnalyticsServiceImpl(GuestAccessLogRepository guestRepo,
                                      AuditLogRepository auditRepo,
                                      InquiryRepository inquiryRepo,
-                                     InquiryMessageRepository msgRepo) {
+                                     InquiryMessageRepository msgRepo,
+                                     MessageModerationAttemptRepository attemptRepo // ✅
+    ) {
         this.guestRepo = guestRepo;
         this.auditRepo = auditRepo;
         this.inquiryRepo = inquiryRepo;
         this.msgRepo = msgRepo;
+        this.attemptRepo = attemptRepo;
     }
 
     @Override
@@ -54,25 +56,20 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
     @Override
     public List<HourlyPointDto> hourly(LocalDate date) {
         Range r = dayRange(date);
-
-        // Saatleri 0..23 dolduralım
         long[] buckets = new long[24];
 
-        // Audit genel yoğunluk
         for (Object[] row : auditRepo.countHourlyAll(r.start, r.end)) {
             int h = ((Number) row[0]).intValue();
             long c = ((Number) row[1]).longValue();
             if (h >= 0 && h < 24) buckets[h] += c;
         }
 
-        // Guest yoğunluk
         for (Object[] row : guestRepo.countHourly(r.start, r.end)) {
             int h = ((Number) row[0]).intValue();
             long c = ((Number) row[1]).longValue();
             if (h >= 0 && h < 24) buckets[h] += c;
         }
 
-        // Mesaj yoğunluk
         for (Object[] row : msgRepo.countHourly(r.start, r.end)) {
             int h = ((Number) row[0]).intValue();
             long c = ((Number) row[1]).longValue();
@@ -94,7 +91,6 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
         Map<Long, Long> messages = toMap(msgRepo.countMessagesByStore(r.start, r.end));
         Map<Long, Long> unread = toMap(msgRepo.countUnreadByStore());
 
-        // storeId set
         Set<Long> storeIds = new LinkedHashSet<>();
         storeIds.addAll(created.keySet());
         storeIds.addAll(deleted.keySet());
@@ -114,12 +110,24 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
             ));
         }
 
-        // basit sıralama: en aktif üstte
         out.sort(Comparator.comparingLong((StoreActivityDto s) ->
                 (s.listingsCreated + s.listingsDeleted + s.inquiriesCreated + s.messagesSent)
         ).reversed());
 
         return out;
+    }
+
+    // ✅ YENİ: spam attempt yapan aktörler
+    @Override
+    public List<SpamAttemptActorDto> spamAttemptActors(LocalDate date) {
+        Range r = dayRange(date);
+        // "since" = gün başlangıcı
+        return attemptRepo.topActorsSince(r.start).stream().map(row -> {
+            var at  = (com.example.otoportdeneme.Enums.ActorType) row[0];
+            Long aid = (row[1] == null) ? null : ((Number) row[1]).longValue();
+            Long cnt = ((Number) row[2]).longValue();
+            return new SpamAttemptActorDto(at.name(), aid, cnt);
+        }).toList();
     }
 
     // -------- helpers --------
@@ -129,14 +137,13 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
         Instant end;
         Range(Instant s, Instant e) { start = s; end = e; }
     }
+
     private Range dayRange(LocalDate date) {
-        ZoneId zone = ZoneId.of("Europe/Istanbul"); // ✅ sabit
+        ZoneId zone = ZoneId.of("Europe/Istanbul");
         ZonedDateTime z0 = date.atStartOfDay(zone);
         ZonedDateTime z1 = z0.plusDays(1);
         return new Range(z0.toInstant(), z1.toInstant());
     }
-
-
 
     private Map<Long, Long> toMap(List<Object[]> rows) {
         Map<Long, Long> m = new HashMap<>();

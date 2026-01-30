@@ -1,5 +1,7 @@
 package com.example.otoportdeneme.services;
 
+import com.example.otoportdeneme.dto_Objects.ListingDetailDto;
+import com.example.otoportdeneme.dto_Objects.ListingDetailMapper;
 import com.example.otoportdeneme.dto_Objects.StoreListingEditDto;
 import com.example.otoportdeneme.dto_Requests.StoreCarUpdateRequest;
 import com.example.otoportdeneme.models.Car;
@@ -36,7 +38,6 @@ public class StoreListingServiceImpl implements StoreListingService {
     @Transactional
     public StoreListingEditDto updateMyListing(Long storeId, Long listingId, StoreCarUpdateRequest req) {
 
-
         Listing l = listingRepository.findById(listingId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found"));
 
@@ -63,11 +64,9 @@ public class StoreListingServiceImpl implements StoreListingService {
 
         listingRepository.save(l);
 
-
         if (req.getExpertReport() != null && l.getCar() != null && l.getCar().getId() != null) {
             expertReportService.upsertByCarId(l.getCar().getId(), req.getExpertReport());
         }
-        System.out.println(">>> service req.expertReport = " + req.getExpertReport());
 
         return toEditDto(l);
     }
@@ -81,6 +80,22 @@ public class StoreListingServiceImpl implements StoreListingService {
         requireOwner(l, storeId);
         listingRepository.delete(l);
     }
+
+    @Override
+    @Transactional
+    public ListingDetailDto getMyListingDetail(Long storeId, Long listingId) {
+
+        Listing listing = listingRepository.findStoreDetailByIdFetchAll(listingId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found"));
+
+        requireOwner(listing, storeId);
+
+        // ✅ STATIC mapper çağrısı
+        return ListingDetailMapper.toDto(listing);
+    }
+
+    // ---- helpers ----
 
     private void requireOwner(Listing l, Long storeId) {
         if (l.getStore() == null || l.getStore().getId() == null || !l.getStore().getId().equals(storeId)) {
@@ -107,9 +122,11 @@ public class StoreListingServiceImpl implements StoreListingService {
             dto.setEngineVolumeCc(l.getCar().getEngineVolumeCc());
             dto.setEnginePowerHp(l.getCar().getEnginePowerHp());
         }
+
         if (l.getCar() != null && l.getCar().getId() != null) {
             dto.setExpertReport(expertReportService.getByCarId(l.getCar().getId()));
         }
+
         return dto;
     }
 }

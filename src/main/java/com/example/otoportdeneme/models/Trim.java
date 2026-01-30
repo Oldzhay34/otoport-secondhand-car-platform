@@ -1,14 +1,19 @@
 package com.example.otoportdeneme.models;
 
+import com.example.otoportdeneme.services.CatalogKey;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "trims",
+@Table(
+        name = "trims",
         indexes = {
                 @Index(name = "ix_trim_model", columnList = "model_id")
         },
         uniqueConstraints = {
-                @UniqueConstraint(name = "ux_trim_model_name", columnNames = {"model_id", "name"})
+                @UniqueConstraint(
+                        name = "ux_trim_model_name_key",
+                        columnNames = {"model_id", "name_key"}
+                )
         }
 )
 public class Trim {
@@ -22,9 +27,18 @@ public class Trim {
     private CarModel model;
 
     @Column(nullable = false, length = 120)
-    private String name; // Örn: "Dream", "Elegance", "AMG"
+    private String name;
+
+    @Column(name = "name_key", nullable = false, length = 180)
+    private String nameKey;
 
     public Trim() {}
+
+    @PrePersist
+    @PreUpdate
+    void syncKey() {
+        this.nameKey = CatalogKey.keyOf(this.name);
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -34,4 +48,6 @@ public class Trim {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getNameKey() { return nameKey; }
 }

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Otoport • Admin • WAL</title>
+    <link rel="stylesheet" href="/css/whiteaheadlogging.css" />
+</head>
+
+<body data-theme="dark">
+<header class="topbar">
+    <div class="logo" onclick="goAdminHome()">OTOPORT • Admin</div>
+
+    <div class="search-box">
+        <input id="q" placeholder="path/body içinde ara (örn: /api/admin, storeId, CREATE...)" />
+        <button id="btnSearch">Ara</button>
+    </div>
+
+    <div class="user-actions">
+        <div class="theme-inline" title="Tema">
+            <span>Light</span>
+            <label class="switch">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider"></span>
+            </label>
+            <span>Dark</span>
+        </div>
+
+        <button class="ghost" type="button" onclick="goAuditLogs()">Audit</button>
+        <button class="ghost" type="button" onclick="refreshRecent()">Yenile</button>
+        <button class="apply" type="button" onclick="logout()">Logout</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <div class="panel">
+        <div id="alert" class="alert"></div>
+
+        <div class="bar">
+            <div class="stats">
+                <div class="stat"><span class="stat-ico">🧾</span> Kayıt: <b id="count">0</b></div>
+                <div class="stat"><span class="stat-ico">⏱️</span> Son çekim: <b id="lastFetch">—</b></div>
+            </div>
+
+            <div class="bar-right">
+                <select id="method" class="sel">
+                    <option value="">METHOD (hepsi)</option>
+                    <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option>
+                </select>
+
+                <input id="status" class="inp" placeholder="status (örn 200)" inputmode="numeric" />
+                <input id="actorId" class="inp" placeholder="actorId (ops.)" inputmode="numeric" />
+                <input id="pathContains" class="inp wide" placeholder="path contains (örn /api/admin/store)" />
+
+                <select id="limit" class="sel">
+                    <option value="50">50</option>
+                    <option value="100" selected>100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                </select>
+
+                <select id="sort" class="sel">
+                    <option value="desc" selected>Yeni → Eski</option>
+                    <option value="asc">Eski → Yeni</option>
+                </select>
+
+                <button class="apply" id="btnApply">Uygula</button>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="tbl">
+                <thead>
+                <tr>
+                    <th>Zaman</th>
+                    <th>Actor</th>
+                    <th>Req</th>
+                    <th>Status</th>
+                    <th>IP</th>
+                    <th>UA</th>
+                    <th>Body</th>
+                </tr>
+                </thead>
+                <tbody id="rows"></tbody>
+            </table>
+        </div>
+
+        <div class="footer">© Otoport • WAL (Write-Ahead Logging)</div>
+    </div>
+</main>
+
+<script src="/js/whiteaheadlogging.js" defer></script>
+</body>
+</html>

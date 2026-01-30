@@ -111,12 +111,6 @@ public class Car {
         return (trim != null) ? trim.getName() : null;
     }
 
-    /**
-     * ✅ Engine bilgisini nasıl tutuyorsun?
-     * Şu an Car üzerinde engine string alanı yok.
-     * Bu yüzden "engine" = Trim adı (ör: "2.0 TDI Design" gibi) olarak döndürüyoruz.
-     * Eğer Trim içinde ayrı engine alanın varsa burada onu döndür.
-     */
     @Transient
     public String getEngine() {
         return getTrimName();
